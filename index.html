@@ -1,0 +1,4602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Livewire Daily</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    /* Default theme = Electric (themes overwrite these via JS) */
+    --bg: #0a0a1f;
+    --bg-2: #15152e;
+    --bg-grad-1: rgba(255, 45, 146, 0.18);
+    --bg-grad-2: rgba(0, 229, 255, 0.12);
+    --card: rgba(255, 255, 255, 0.04);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --text: #f5f5fa;
+    --muted: #9b9bb5;
+    --pink: #ff2d92;
+    --pink-glow: rgba(255, 45, 146, 0.35);
+    --cyan: #00e5ff;
+    --cyan-glow: rgba(0, 229, 255, 0.3);
+    --yellow: #ffe14a;
+    --on-accent: #0a0a1f;
+    --good: #4ade80;
+    --bad: #ff5470;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+  }
+
+  body {
+    font-family: var(--font);
+    background:
+      radial-gradient(1200px 600px at 80% -10%, var(--bg-grad-1), transparent 60%),
+      radial-gradient(900px 500px at -10% 30%, var(--bg-grad-2), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+    padding: 20px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding-bottom: 60px;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .icon-btn {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.2s;
+  }
+  .icon-btn:hover { border-color: var(--pink); transform: scale(1.05); }
+
+  /* ---------- Custom theme builder ---------- */
+  .color-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 14px 0 18px;
+  }
+  .color-pick {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+  }
+  .color-pick label {
+    flex: 1; font-size: 12px; font-weight: 600;
+    color: var(--text);
+  }
+  .color-pick input[type="color"] {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    cursor: pointer;
+    background: none;
+    padding: 0;
+  }
+  .color-pick input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+  .color-pick input[type="color"]::-webkit-color-swatch { border: none; border-radius: 6px; }
+  .theme-card.custom-tile {
+    border-style: dashed;
+  }
+  .theme-card.custom-tile:not(.has-custom) .theme-swatches {
+    background: repeating-linear-gradient(45deg, var(--card-border), var(--card-border) 4px, transparent 4px, transparent 8px);
+  }
+
+  /* ---------- Team code modal ---------- */
+  .modal-card.team-modal { max-width: 460px; text-align: left; }
+  .team-modal h2 { text-align: center; }
+  .team-modal > p { text-align: center; }
+  .team-section {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-top: 12px;
+  }
+  .team-section h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--cyan);
+    margin-bottom: 10px;
+  }
+  .team-section textarea {
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 10px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 11px;
+    font-family: "Menlo", "Monaco", monospace;
+    margin-bottom: 8px;
+    resize: vertical;
+    word-break: break-all;
+  }
+  .team-section textarea:focus { outline: none; border-color: var(--pink); }
+  .team-section button { width: 100%; }
+
+  /* ---------- Theme picker ---------- */
+  .theme-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 8px 0 16px;
+  }
+  .theme-card {
+    background: rgba(0,0,0,0.3);
+    border: 2px solid var(--card-border);
+    border-radius: 12px;
+    padding: 10px 6px 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: 0.15s;
+  }
+  .theme-card:hover {
+    border-color: var(--pink);
+    transform: translateY(-2px);
+  }
+  .theme-card.active {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 2px var(--pink-glow);
+  }
+  .theme-swatches {
+    display: flex;
+    height: 28px;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .theme-swatches div { flex: 1; }
+  .theme-emoji { font-size: 18px; line-height: 1; margin-bottom: 2px; }
+  .theme-name {
+    font-size: 10px;
+    color: var(--text);
+    font-weight: 600;
+    line-height: 1.1;
+  }
+  .modal-card.theme-modal { max-width: 480px; }
+  @media (max-width: 480px) {
+    .theme-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  .logo {
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    font-size: 13px;
+    color: var(--pink);
+    text-shadow: 0 0 10px var(--pink-glow);
+  }
+  .user-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .user-chip:hover { border-color: var(--pink); }
+  .role-tag {
+    font-size: 10px;
+    background: var(--pink);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  /* ---------- Team banner ---------- */
+  .team-banner {
+    text-align: center;
+    margin-bottom: 18px;
+    padding: 18px 20px;
+    background: linear-gradient(135deg, var(--card), transparent, var(--card));
+    border-top: 1px solid var(--card-border);
+    border-bottom: 1px solid var(--card-border);
+    position: relative;
+  }
+  .team-banner-label {
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    color: var(--muted);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .team-banner-name {
+    font-size: clamp(26px, 6vw, 38px);
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+    text-shadow: 0 0 30px var(--pink-glow);
+  }
+  .team-banner-sparkle {
+    color: var(--yellow);
+    font-weight: 700;
+    margin: 0 12px;
+    text-shadow: 0 0 8px var(--cyan-glow);
+  }
+
+  /* ---------- Hero countdown ---------- */
+  .hero {
+    text-align: center;
+    padding: 36px 20px 28px;
+    background:
+      linear-gradient(135deg, rgba(255,45,146,0.12), rgba(0,229,255,0.08));
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    opacity: 0.25;
+    z-index: -1;
+    filter: blur(20px);
+  }
+  .hero-label {
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .countdown-number {
+    font-size: clamp(70px, 16vw, 120px);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+  .countdown-sub {
+    font-size: 18px;
+    margin-top: 4px;
+    color: var(--text);
+    font-weight: 600;
+  }
+  .nationals-date {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 8px;
+  }
+
+  /* ---------- Stat cards ---------- */
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .stat {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 18px;
+    text-align: center;
+  }
+  .stat-num {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .stat-num.cyan { color: var(--cyan); text-shadow: 0 0 12px var(--cyan-glow); }
+  .stat-num.yellow { color: var(--yellow); }
+  .stat-label {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ---------- Progress bar ---------- */
+  .progress-block {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin-bottom: 28px;
+  }
+  .progress-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .progress-head h3 { font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .progress-head .count { font-weight: 700; }
+  .progress-bar {
+    height: 8px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--pink), var(--cyan));
+    border-radius: 999px;
+    width: 0%;
+    transition: width 0.4s ease;
+    box-shadow: 0 0 12px var(--pink-glow);
+  }
+
+  /* ---------- Competitions ---------- */
+  .comp-card .section-num {
+    background: var(--yellow);
+    color: var(--on-accent);
+    font-size: 16px;
+  }
+  .comp-add-btn {
+    width: calc(100% - 36px);
+    margin: 12px 18px;
+    padding: 12px;
+    background: rgba(0,0,0,0.2);
+    border: 1px dashed var(--card-border);
+    color: var(--muted);
+    border-radius: 12px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    transition: 0.15s;
+  }
+  .comp-add-btn:hover {
+    color: var(--pink);
+    border-color: var(--pink);
+  }
+  .comp-item {
+    padding: 14px 18px;
+    border-top: 1px solid var(--card-border);
+  }
+  .comp-item.expanded { background: rgba(0,0,0,0.12); }
+  .comp-header {
+    display: grid;
+    grid-template-columns: 28px 1fr 70px;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+  .comp-status { font-size: 20px; text-align: center; }
+  .comp-name { font-weight: 700; font-size: 15px; }
+  .comp-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .comp-countdown { text-align: right; }
+  .comp-countdown .num {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--cyan);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .comp-countdown .label {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .comp-placement {
+    display: inline-block;
+    background: var(--yellow);
+    color: var(--on-accent);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 800;
+    margin-right: 6px;
+    letter-spacing: 0.05em;
+    vertical-align: middle;
+  }
+  .comp-notes-preview {
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 8px;
+    padding-left: 40px;
+  }
+  .comp-edit-form {
+    display: grid;
+    gap: 8px;
+    margin-top: 14px;
+    padding: 14px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 10px;
+  }
+  .comp-edit-form input,
+  .comp-edit-form textarea {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 13px;
+  }
+  .comp-edit-form input:focus, .comp-edit-form textarea:focus {
+    outline: none; border-color: var(--pink);
+  }
+  .comp-edit-form textarea { resize: vertical; min-height: 60px; }
+  .comp-edit-form .row2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .comp-edit-form .form-actions {
+    display: flex; gap: 8px; margin-top: 4px;
+  }
+  .comp-edit-form .form-actions button {
+    flex: 1; padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+  }
+  .comp-edit-form .btn-save {
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    color: var(--on-accent);
+  }
+  .comp-edit-form .btn-delete {
+    background: rgba(255, 84, 112, 0.15);
+    color: var(--bad);
+    border: 1px solid var(--bad);
+  }
+  @media (max-width: 480px) {
+    .comp-edit-form .row2 { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Weekly schedule ---------- */
+  .week-card .section-num {
+    background: var(--card);
+    color: var(--text);
+    font-size: 18px;
+  }
+  .week-nav {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 18px;
+    border-top: 1px solid var(--card-border);
+    background: rgba(0,0,0,0.1);
+  }
+  .week-nav button {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 4px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+  }
+  .week-nav button:hover { border-color: var(--pink); color: var(--pink); }
+  .week-nav .week-range {
+    flex: 1; text-align: center;
+    font-size: 13px; font-weight: 600;
+  }
+  .week-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 28px;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--card-border);
+    transition: 0.15s;
+  }
+  .week-row.today {
+    background: linear-gradient(90deg, var(--pink-glow), transparent);
+  }
+  .week-row.done .week-activity {
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+  .week-day {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    padding: 6px 8px;
+    border-radius: 10px;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .week-day .day-name {
+    font-weight: 800; font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .week-day .day-date {
+    font-size: 15px; font-weight: 700; color: var(--text);
+  }
+  .week-row.today .week-day {
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    border-color: transparent;
+  }
+  .week-row.today .week-day .day-name,
+  .week-row.today .week-day .day-date {
+    color: var(--on-accent);
+  }
+  .week-activity {
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .week-activity.editable:hover {
+    color: var(--pink);
+  }
+  .week-activity-input {
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--pink);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 14px;
+  }
+  .week-activity-input:focus { outline: none; }
+
+  /* ---------- Today's plan timeline ---------- */
+  .plan-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+  }
+  .plan-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 14px;
+  }
+  .plan-head h3 {
+    font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .plan-next {
+    font-size: 12px;
+    color: var(--pink);
+    font-weight: 700;
+  }
+  .plan-empty {
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+    text-align: center;
+    padding: 6px 0;
+  }
+  .plan-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 0;
+    border-top: 1px solid var(--card-border);
+    transition: 0.15s;
+  }
+  .plan-row:first-of-type { border-top: none; padding-top: 4px; }
+  .plan-row.done .plan-name { color: var(--muted); text-decoration: line-through; }
+  .plan-row.upnow {
+    background: linear-gradient(90deg, var(--pink-glow), transparent);
+    margin: 0 -10px;
+    padding-left: 10px; padding-right: 10px;
+    border-radius: 10px;
+    border-top-color: transparent;
+  }
+  .plan-row.upnow + .plan-row { border-top-color: transparent; }
+  .plan-time {
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--cyan);
+    min-width: 70px;
+    font-variant-numeric: tabular-nums;
+  }
+  .plan-time.unset { color: var(--muted); font-weight: 500; font-size: 13px; font-style: italic; }
+  .plan-name { flex: 1; font-weight: 600; }
+  .plan-duration { font-size: 11px; color: var(--muted); }
+
+  /* Section header time chip */
+  .section-time-chip {
+    margin-left: auto;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--card-border);
+    color: var(--cyan);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.15s;
+    font-variant-numeric: tabular-nums;
+  }
+  .section-time-chip:hover { border-color: var(--cyan); }
+  .section-time-chip.unset { color: var(--muted); font-weight: 500; font-style: italic; }
+  .section-time-chip input {
+    background: transparent; border: none; color: inherit;
+    font: inherit; width: 80px; padding: 0;
+  }
+  .section-time-chip input:focus { outline: none; }
+
+  /* ---------- Sections ---------- */
+  .section-h1 {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 8px 0 16px;
+  }
+  .section-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .section-head {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-num {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    display: grid; place-items: center;
+    font-weight: 800;
+    color: var(--on-accent);
+    flex-shrink: 0;
+  }
+  .section-title { font-weight: 700; font-size: 16px; }
+  .section-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .section-purpose { font-size: 12px; color: var(--muted); padding: 0 18px 12px; font-style: italic; }
+
+  /* ---------- Items ---------- */
+  .item {
+    padding: 12px 18px;
+    border-top: 1px solid var(--card-border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .item:hover { background: rgba(255,255,255,0.02); }
+  .item-row {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .checkbox {
+    width: 24px; height: 24px;
+    border-radius: 7px;
+    border: 2px solid var(--card-border);
+    flex-shrink: 0;
+    display: grid; place-items: center;
+    transition: 0.2s;
+  }
+  .item.done .checkbox {
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    border-color: transparent;
+    box-shadow: 0 0 10px var(--pink-glow);
+  }
+  .checkbox svg { width: 14px; height: 14px; color: var(--on-accent); opacity: 0; transition: 0.2s; }
+  .item.done .checkbox svg { opacity: 1; }
+  .item-name {
+    flex: 1;
+    font-weight: 500;
+    transition: 0.2s;
+  }
+  .item.done .item-name {
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+  .chevron {
+    color: var(--muted);
+    transition: 0.2s;
+    flex-shrink: 0;
+  }
+  .item.open .chevron { transform: rotate(180deg); }
+
+  .item-detail {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+  .item.open .item-detail { max-height: 600px; }
+  .item-detail-inner {
+    padding: 12px 0 4px 36px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .detail-label {
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--cyan);
+    margin: 10px 0 4px;
+  }
+  .detail-list { list-style: none; padding-left: 0; }
+  .detail-list li { padding: 2px 0; }
+  .detail-list.good li::before { content: '✓ '; color: var(--good); font-weight: 700; }
+  .detail-list.bad li::before { content: '✗ '; color: var(--bad); font-weight: 700; }
+
+  /* ---------- Custom plan ---------- */
+  .custom-card .section-num {
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
+  }
+  .custom-empty {
+    padding: 18px;
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+    text-align: center;
+    border-top: 1px solid var(--card-border);
+  }
+  .custom-item-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--card-border);
+  }
+  .custom-item-row .item-name { transition: 0.2s; }
+  .custom-item-row.done .item-name { color: var(--muted); text-decoration: line-through; }
+  .custom-time-tag {
+    background: rgba(0,0,0,0.25);
+    color: var(--cyan);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .custom-time-tag.unset { color: var(--muted); font-style: italic; font-weight: 500; }
+  .delete-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: 0.15s;
+  }
+  .delete-btn:hover { color: var(--bad); background: rgba(255, 84, 112, 0.1); }
+  .custom-add-form {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 8px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--card-border);
+    background: rgba(0,0,0,0.15);
+  }
+  .custom-add-form input {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 13px;
+  }
+  .custom-add-form input:focus { outline: none; border-color: var(--pink); }
+  .custom-add-form button {
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    color: var(--on-accent);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  @media (max-width: 480px) {
+    .custom-add-form { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Assistant schedule ---------- */
+  .assist-card .section-num {
+    background: var(--yellow);
+    color: var(--on-accent);
+  }
+  .assist-row {
+    display: grid;
+    grid-template-columns: 70px 1fr 80px auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    border-top: 1px solid var(--card-border);
+    font-size: 14px;
+  }
+  .assist-day {
+    background: var(--yellow);
+    color: var(--on-accent);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-align: center;
+  }
+  .assist-time {
+    color: var(--cyan);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    text-align: right;
+  }
+  .assist-add-form {
+    display: grid;
+    grid-template-columns: 80px 1fr 110px auto;
+    gap: 8px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--card-border);
+    background: rgba(0,0,0,0.15);
+  }
+  .assist-add-form select, .assist-add-form input {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 13px;
+  }
+  .assist-add-form select:focus, .assist-add-form input:focus {
+    outline: none; border-color: var(--pink);
+  }
+  .assist-add-form button {
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    color: var(--on-accent);
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .assist-sync-bar {
+    padding: 14px 18px;
+    border-top: 1px solid var(--card-border);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .assist-sync-bar .note { flex: 1; font-size: 12px; color: var(--muted); }
+  @media (max-width: 480px) {
+    .assist-add-form { grid-template-columns: 1fr 1fr; }
+    .assist-row { grid-template-columns: 60px 1fr 70px auto; gap: 6px; padding: 10px; }
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg-2);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    opacity: 0;
+    transition: 0.25s;
+    z-index: 200;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ---------- Expectations ---------- */
+  .expectations {
+    background: linear-gradient(135deg, rgba(255,45,146,0.08), rgba(0,229,255,0.05));
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 20px 22px;
+    margin: 28px 0 18px;
+  }
+  .expectations h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--pink);
+    margin-bottom: 4px;
+  }
+  .expectations .sub {
+    font-size: 12px; color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .exp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+  }
+  .exp-grid div {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px;
+  }
+  .exp-grid div::before {
+    content: '✦';
+    color: var(--yellow);
+  }
+
+  /* ---------- Reminder ---------- */
+  .reminder {
+    text-align: center;
+    padding: 22px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .reminder strong { color: var(--text); }
+  .reminder .big {
+    margin-top: 14px;
+    color: var(--yellow);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  /* ---------- Actions ---------- */
+  .actions {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  button {
+    font: inherit;
+    cursor: pointer;
+    border: none;
+  }
+  .btn {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: 0.2s;
+  }
+  .btn:hover { border-color: var(--pink); color: var(--pink); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    color: var(--on-accent);
+    font-weight: 700;
+    border: none;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px var(--pink-glow); color: var(--on-accent); }
+
+  /* ---------- Admin panel ---------- */
+  .admin {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 22px;
+    margin-top: 24px;
+  }
+  .admin h2 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--cyan);
+    margin-bottom: 16px;
+  }
+  .admin label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 12px 0 6px;
+  }
+  .admin input {
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 10px;
+    font: inherit;
+  }
+  .admin input:focus { outline: none; border-color: var(--cyan); }
+  .admin .row { display: flex; gap: 10px; }
+  .admin .row > * { flex: 1; }
+  .admin-actions { margin-top: 18px; display: flex; gap: 10px; }
+
+  /* ---------- Modal ---------- */
+  .modal {
+    position: fixed; inset: 0;
+    background: rgba(10, 10, 31, 0.85);
+    backdrop-filter: blur(12px);
+    display: grid; place-items: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal.hidden { display: none; }
+  .modal-card {
+    background: var(--bg-2);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 32px 28px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+  }
+  .modal-card h2 {
+    font-size: 22px;
+    margin-bottom: 4px;
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .modal-card p { color: var(--muted); font-size: 14px; margin-bottom: 14px; }
+  .modal-card input {
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 12px 14px;
+    border-radius: 10px;
+    font: inherit;
+    margin-bottom: 16px;
+  }
+  .modal-card input:focus { outline: none; border-color: var(--pink); }
+  .role-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .role-btn .role-emoji { font-size: 20px; display: block; margin-bottom: 4px; }
+  .role-btn small { display: block; font-size: 10px; opacity: 0.7; margin-top: 2px; font-weight: 400; }
+  .role-btn {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: 0.2s;
+  }
+  .role-btn.active {
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    color: var(--on-accent);
+    border-color: transparent;
+  }
+
+  /* ---------- Power Level ---------- */
+  .power-card {
+    background: linear-gradient(135deg, rgba(255,45,146,0.10), rgba(0,229,255,0.06));
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 18px 22px;
+    margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .power-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+  .power-emoji {
+    font-size: 36px;
+    line-height: 1;
+    filter: drop-shadow(0 0 10px var(--pink-glow));
+  }
+  .power-info { flex: 1; min-width: 0; }
+  .power-label {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .power-level {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--text);
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+    margin-top: 2px;
+  }
+  .power-level .lv {
+    color: var(--pink);
+    text-shadow: 0 0 8px var(--pink-glow);
+    margin-right: 6px;
+  }
+  .power-today {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--card-border);
+    color: var(--yellow);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .power-today.zero { color: var(--muted); font-weight: 600; }
+  .power-progress {
+    height: 8px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .power-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--pink), var(--cyan));
+    border-radius: 999px;
+    width: 0%;
+    transition: width 0.5s ease;
+    box-shadow: 0 0 12px var(--pink-glow);
+  }
+  .power-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .power-progress-meta .next-title { color: var(--cyan); font-weight: 700; }
+  .power-max {
+    text-align: center;
+    color: var(--yellow);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    margin-top: 6px;
+  }
+
+  /* ---------- Bonus Training ---------- */
+  .bonus-card .section-num {
+    background: linear-gradient(135deg, #ff5e5e, var(--yellow));
+    color: var(--on-accent);
+  }
+  .bonus-multiplier-bar {
+    padding: 10px 18px;
+    border-top: 1px solid var(--card-border);
+    background: rgba(0,0,0,0.15);
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .bonus-mult-chip {
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    color: var(--on-accent);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+  .bonus-mult-chip.x1 {
+    background: rgba(255,255,255,0.08);
+    color: var(--muted);
+  }
+  .bonus-preset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--card-border);
+  }
+  .bonus-preset {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    transition: 0.15s;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .bonus-preset:hover {
+    border-color: var(--pink);
+    transform: translateY(-1px);
+    background: rgba(255,45,146,0.08);
+  }
+  .bonus-preset .preset-emoji { font-size: 18px; }
+  .bonus-preset .preset-name { flex: 1; }
+  .bonus-preset .preset-pts {
+    color: var(--yellow);
+    font-weight: 800;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .bonus-custom-form {
+    display: grid;
+    grid-template-columns: 1fr 70px auto;
+    gap: 8px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--card-border);
+    background: rgba(0,0,0,0.15);
+  }
+  .bonus-custom-form input {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 13px;
+  }
+  .bonus-custom-form input:focus { outline: none; border-color: var(--pink); }
+  .bonus-custom-form button {
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    color: var(--on-accent);
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .bonus-today-head {
+    padding: 12px 18px 4px;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    font-weight: 800;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--card-border);
+  }
+  .bonus-today-total { color: var(--yellow); }
+  .bonus-today-row {
+    display: grid;
+    grid-template-columns: 30px 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 18px;
+    font-size: 14px;
+  }
+  .bonus-today-row .pts {
+    color: var(--yellow);
+    font-weight: 800;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .bonus-empty {
+    padding: 12px 18px 16px;
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+    text-align: center;
+  }
+  @media (max-width: 480px) {
+    .bonus-custom-form { grid-template-columns: 1fr 1fr; }
+    .bonus-custom-form button { grid-column: span 2; }
+    .bonus-preset-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ---------- Team motto ---------- */
+  .team-motto {
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    font-weight: 700;
+    margin-top: 6px;
+    text-shadow: 0 0 8px var(--cyan-glow);
+  }
+  .team-motto.editable { cursor: pointer; transition: 0.15s; }
+  .team-motto.editable:hover { color: var(--pink); }
+  .team-motto.empty { color: var(--muted); opacity: 0.6; font-style: italic; font-weight: 500; text-shadow: none; }
+  .team-motto-input {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--pink);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 13px;
+    text-align: center;
+    min-width: 220px;
+    letter-spacing: 0.05em;
+  }
+  .team-motto-input:focus { outline: none; }
+
+  /* ---------- Daily affirmation ---------- */
+  .affirmation {
+    text-align: center;
+    background: linear-gradient(135deg, rgba(255,225,74,0.10), rgba(0,229,255,0.05));
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 14px 20px;
+    margin-bottom: 18px;
+    position: relative;
+  }
+  .affirmation-label {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--yellow);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-weight: 800;
+  }
+  .affirmation-text {
+    font-size: 16px;
+    font-weight: 600;
+    font-style: italic;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  /* ---------- Badges ---------- */
+  .badges-card .section-num {
+    background: linear-gradient(135deg, var(--yellow), #ff9966);
+    color: var(--on-accent);
+  }
+  .badge-summary {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 0 18px 4px;
+  }
+  .badge-summary strong { color: var(--yellow); }
+  .badge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+    gap: 10px;
+    padding: 14px 18px 18px;
+  }
+  .badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 12px 6px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    transition: 0.2s;
+    cursor: default;
+    min-height: 88px;
+  }
+  .badge.unlocked {
+    background: linear-gradient(135deg, rgba(255,45,146,0.15), rgba(0,229,255,0.1));
+    border-color: var(--pink);
+    box-shadow: 0 0 12px var(--pink-glow);
+  }
+  .badge.locked { opacity: 0.35; filter: grayscale(0.85); }
+  .badge-emoji {
+    font-size: 28px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .badge-name {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+  }
+  .badge-desc {
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 3px;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* ---------- Birthdays ---------- */
+  .birthdays-card .section-num {
+    background: linear-gradient(135deg, #ff8db5, #ffd97a);
+    color: #5a2a3e;
+  }
+  .birthday-row {
+    display: grid;
+    grid-template-columns: 36px 1fr auto 24px;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--card-border);
+    font-size: 14px;
+    transition: 0.15s;
+  }
+  .birthday-row.today {
+    background: linear-gradient(90deg, rgba(255,225,74,0.18), transparent);
+  }
+  .birthday-row.today .birthday-name {
+    color: var(--yellow);
+    font-weight: 800;
+  }
+  .birthday-cake { font-size: 22px; text-align: center; }
+  .birthday-name { font-weight: 600; }
+  .birthday-when {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .birthday-when.soon { color: var(--cyan); font-weight: 700; }
+  .birthday-when.today {
+    color: var(--yellow);
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .birthday-add-form {
+    display: grid;
+    grid-template-columns: 1fr 140px auto;
+    gap: 8px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--card-border);
+    background: rgba(0,0,0,0.15);
+  }
+  .birthday-add-form input {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 13px;
+  }
+  .birthday-add-form input:focus { outline: none; border-color: var(--pink); }
+  .birthday-add-form button {
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    color: var(--on-accent);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  @media (max-width: 480px) {
+    .birthday-add-form { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Quotes wall ---------- */
+  .quotes-card .section-num {
+    background: linear-gradient(135deg, #b794f6, #f9a8d4);
+    color: #2c0e3e;
+  }
+  .quote-item {
+    padding: 14px 18px;
+    border-top: 1px solid var(--card-border);
+    position: relative;
+  }
+  .quote-text {
+    font-size: 15px;
+    font-style: italic;
+    color: var(--text);
+    line-height: 1.5;
+    padding-right: 24px;
+  }
+  .quote-text::before { content: '\201C'; color: var(--cyan); font-weight: 800; font-size: 18px; margin-right: 2px; }
+  .quote-text::after { content: '\201D'; color: var(--cyan); font-weight: 800; font-size: 18px; margin-left: 2px; }
+  .quote-by {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: right;
+    margin-top: 6px;
+    font-weight: 600;
+  }
+  .quote-by::before { content: '— '; }
+  .quote-delete {
+    position: absolute;
+    right: 10px; top: 10px;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    opacity: 0;
+    transition: 0.15s;
+  }
+  .quote-item:hover .quote-delete { opacity: 1; }
+  .quote-delete:hover { color: var(--bad); background: rgba(255,84,112,0.1); }
+  .quote-add-form {
+    display: grid;
+    grid-template-columns: 1fr 120px auto;
+    gap: 8px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--card-border);
+    background: rgba(0,0,0,0.15);
+  }
+  .quote-add-form input {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 13px;
+  }
+  .quote-add-form input:focus { outline: none; border-color: var(--pink); }
+  .quote-add-form button {
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    color: var(--on-accent);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  @media (max-width: 480px) {
+    .quote-add-form { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Confetti ---------- */
+  @keyframes pop {
+    0% { transform: scale(0.5); opacity: 0; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .item.just-checked .checkbox { animation: pop 0.4s ease; }
+
+  .confetti-container {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 300;
+    overflow: hidden;
+  }
+  .confetti-piece {
+    position: absolute;
+    top: -20px;
+    width: 10px; height: 14px;
+    opacity: 0.95;
+    animation: confetti-fall 1.8s ease-out forwards;
+  }
+  @keyframes confetti-fall {
+    0%   { transform: translateY(-30px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0.3; }
+  }
+  .sparkle {
+    position: fixed;
+    pointer-events: none;
+    z-index: 300;
+    font-size: 20px;
+    animation: sparkle-float 1.2s ease-out forwards;
+  }
+  @keyframes sparkle-float {
+    0%   { transform: translate(0, 0) scale(0.4) rotate(0deg); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(1.2) rotate(180deg); opacity: 0; }
+  }
+
+  .badge-toast {
+    position: fixed;
+    top: 30px; left: 50%;
+    transform: translateX(-50%) translateY(-120px);
+    background: linear-gradient(135deg, var(--pink), var(--cyan));
+    color: var(--on-accent);
+    padding: 14px 20px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 15px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+    opacity: 0;
+    transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 350;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    max-width: 92%;
+    text-align: left;
+  }
+  .badge-toast .badge-toast-emoji { font-size: 32px; line-height: 1; }
+  .badge-toast .badge-toast-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    opacity: 0.8;
+    font-weight: 800;
+    margin-bottom: 2px;
+  }
+  .badge-toast .badge-toast-name { font-size: 16px; font-weight: 800; line-height: 1.1; }
+  .badge-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 480px) {
+    body { padding: 14px; }
+    .exp-grid { grid-template-columns: 1fr; }
+    .admin .row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Welcome modal (first load) -->
+<div id="welcome-modal" class="modal hidden">
+  <div class="modal-card">
+    <h2>Welcome to Livewire</h2>
+    <p>What's your name?</p>
+    <input type="text" id="name-input" placeholder="Your name" maxlength="30">
+    <p>I'm a... <small style="opacity:0.6;">(pick any that apply)</small></p>
+    <div class="role-buttons">
+      <button class="role-btn" data-role="teacher"><span class="role-emoji">👩‍🏫</span>Teacher<small>Full control</small></button>
+      <button class="role-btn" data-role="assistant"><span class="role-emoji">🤝</span>Assistant<small>Helper</small></button>
+      <button class="role-btn active" data-role="dancer"><span class="role-emoji">💃</span>Dancer<small>Team member</small></button>
+    </div>
+    <p>Which team?</p>
+    <input type="text" id="team-input" placeholder="e.g. Livewire" value="Livewire" maxlength="40">
+    <p>Birthday? <small style="opacity:0.6;">(optional, just month + day)</small></p>
+    <input type="date" id="birthday-input" placeholder="MM/DD">
+    <button id="start-btn" class="btn btn-primary" style="width: 100%; padding: 14px;">Let's go ⚡</button>
+  </div>
+</div>
+
+<!-- Theme picker modal -->
+<div id="theme-modal" class="modal hidden">
+  <div class="modal-card theme-modal">
+    <h2>Pick your vibe</h2>
+    <p>Tap a theme to switch</p>
+    <div class="theme-grid" id="theme-grid"></div>
+    <button id="close-theme" class="btn" style="width: 100%;">Done</button>
+  </div>
+</div>
+
+<!-- Custom theme builder modal -->
+<div id="custom-theme-modal" class="modal hidden">
+  <div class="modal-card">
+    <h2>Custom Team Theme</h2>
+    <p style="font-size:13px; color:var(--muted);">Pick colors that match your team's vibe</p>
+    <div class="color-grid">
+      <div class="color-pick"><label>Background</label><input type="color" id="ct-bg" value="#0a0a1f"></div>
+      <div class="color-pick"><label>Text</label><input type="color" id="ct-text" value="#f5f5fa"></div>
+      <div class="color-pick"><label>Primary</label><input type="color" id="ct-pink" value="#ff2d92"></div>
+      <div class="color-pick"><label>Secondary</label><input type="color" id="ct-cyan" value="#00e5ff"></div>
+      <div class="color-pick" style="grid-column: 1 / -1;"><label>Highlight</label><input type="color" id="ct-yellow" value="#ffe14a"></div>
+    </div>
+    <button id="ct-save" class="btn btn-primary" style="width:100%; padding:12px; margin-bottom:8px;">Save & Apply</button>
+    <button id="ct-cancel" class="btn" style="width:100%;">Cancel</button>
+  </div>
+</div>
+
+<!-- Team code modal -->
+<div id="team-code-modal" class="modal hidden">
+  <div class="modal-card team-modal">
+    <h2>Team Code</h2>
+    <p style="font-size:13px; color:var(--muted);">Share your schedule with your team, or import theirs</p>
+
+    <div class="team-section">
+      <h3>📤 Share my schedule</h3>
+      <button id="gen-btn" class="btn btn-primary">Generate code</button>
+      <div id="gen-output" class="hidden" style="margin-top:10px;">
+        <textarea id="code-display" readonly rows="3"></textarea>
+        <button id="copy-btn" class="btn">📋 Copy to clipboard</button>
+      </div>
+    </div>
+
+    <div class="team-section">
+      <h3>📥 Import from teammate</h3>
+      <textarea id="paste-input" rows="3" placeholder="Paste team code here (starts with LIVEWIRE-)..."></textarea>
+      <button id="apply-btn" class="btn btn-primary">Apply code</button>
+    </div>
+
+    <button id="close-team" class="btn" style="width: 100%; margin-top: 18px;">Close</button>
+  </div>
+</div>
+
+<main>
+  <div class="topbar">
+    <div class="logo">⚡ LIVEWIRE DAILY</div>
+    <div class="topbar-right">
+      <button class="icon-btn" id="team-btn" title="Team code (share / import)">🔗</button>
+      <a class="icon-btn" id="myweek-btn" href="https://tdmffss033vb-production-0ubs7ten.us-central1.suga.run/" target="_blank" rel="noopener" title="Open My Week planner" style="text-decoration:none;">📅</a>
+      <button class="icon-btn" id="theme-btn" title="Change theme">🎨</button>
+      <div class="user-chip" id="user-chip">
+        <span id="user-name-display">—</span>
+        <span class="role-tag" id="user-role-tag">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team banner -->
+  <div class="team-banner">
+    <div class="team-banner-label">TEAM</div>
+    <div class="team-banner-name">
+      <span class="team-banner-sparkle">✦</span><span id="team-banner-text">—</span><span class="team-banner-sparkle">✦</span>
+    </div>
+    <div class="team-motto empty" id="team-motto">+ add team motto</div>
+  </div>
+
+  <!-- Daily affirmation -->
+  <div class="affirmation">
+    <div class="affirmation-label">Today's vibe ✨</div>
+    <div class="affirmation-text" id="affirmation-text">—</div>
+  </div>
+
+  <!-- Hero countdown -->
+  <div class="hero">
+    <div class="hero-label">Days until Nationals</div>
+    <div class="countdown-number" id="days-num">—</div>
+    <div class="nationals-date" id="nationals-date">—</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num cyan" id="practices-num">—</div>
+      <div class="stat-label">Practices left</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num yellow" id="streak-num">—</div>
+      <div class="stat-label">Day streak 🔥</div>
+    </div>
+  </div>
+
+  <!-- Power Level (XP) -->
+  <div class="power-card" id="power-card">
+    <div class="power-head">
+      <div class="power-emoji" id="power-emoji">🌱</div>
+      <div class="power-info">
+        <div class="power-label">Power Level</div>
+        <div class="power-level"><span class="lv" id="power-lv">Lv 1</span><span id="power-title">Rookie</span></div>
+      </div>
+      <div class="power-today zero" id="power-today">+0 today</div>
+    </div>
+    <div class="power-progress"><div class="power-progress-fill" id="power-fill"></div></div>
+    <div class="power-progress-meta">
+      <span><span id="power-xp">0</span> XP</span>
+      <span class="next-title" id="power-next">100 XP → Striver ✨</span>
+    </div>
+  </div>
+
+  <!-- Achievement badges -->
+  <div class="badges-card section-card" id="badges-card">
+    <div class="section-head">
+      <div class="section-num">🏅</div>
+      <div style="flex:1;">
+        <div class="section-title">Achievements</div>
+        <div class="section-meta" id="badges-summary">Unlock badges as you grind</div>
+      </div>
+    </div>
+    <div class="badge-grid" id="badge-grid"></div>
+  </div>
+
+  <!-- Competitions: upcoming countdowns + past memories -->
+  <div class="comp-card section-card">
+    <div class="section-head">
+      <div class="section-num">🏆</div>
+      <div style="flex:1;">
+        <div class="section-title">Competitions</div>
+        <div class="section-meta" id="comp-meta">Track upcoming comps and past memories</div>
+      </div>
+    </div>
+    <div id="comp-list"></div>
+    <button class="comp-add-btn" id="comp-add-btn">+ Add Competition</button>
+  </div>
+
+  <!-- Weekly schedule (default from photo, teachers can edit) -->
+  <div class="week-card section-card">
+    <div class="section-head">
+      <div class="section-num">📅</div>
+      <div style="flex:1;">
+        <div class="section-title">This Week</div>
+        <div class="section-meta" id="week-edit-hint">Tap a checkbox to mark a day complete</div>
+      </div>
+    </div>
+    <div class="week-nav">
+      <button id="week-prev">← Prev</button>
+      <div class="week-range" id="week-range">—</div>
+      <button id="week-next">Next →</button>
+    </div>
+    <div id="week-list"></div>
+  </div>
+
+  <!-- Today's plan timeline -->
+  <div class="plan-card">
+    <div class="plan-head">
+      <h3>Today's Plan</h3>
+      <div class="plan-next" id="plan-next"></div>
+    </div>
+    <div id="plan-list"></div>
+  </div>
+
+  <!-- Today's progress -->
+  <div class="progress-block">
+    <div class="progress-head">
+      <h3>Today's Training</h3>
+      <div class="count"><span id="done-count">0</span> / <span id="total-count">0</span></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+
+  <!-- Sections rendered here -->
+  <div id="sections"></div>
+
+  <!-- Bonus training (extra effort = bonus XP) -->
+  <div class="bonus-card section-card" id="bonus-card">
+    <div class="section-head">
+      <div class="section-num">🔥</div>
+      <div style="flex:1;">
+        <div class="section-title">Bonus Training</div>
+        <div class="section-meta">Push harder, earn extra XP</div>
+      </div>
+    </div>
+    <div class="bonus-multiplier-bar">
+      <span>Streak multiplier:</span>
+      <span class="bonus-mult-chip x1" id="bonus-mult-chip">×1</span>
+      <span id="bonus-mult-note" style="flex:1;">3-day streak → ×2 · 7-day → ×3 · 14-day → ×4 · 30-day → ×5</span>
+    </div>
+    <div class="bonus-preset-grid" id="bonus-preset-grid"></div>
+    <div class="bonus-custom-form">
+      <input type="text" id="bonus-custom-name" placeholder="Custom bonus (e.g. Conditioning)" maxlength="40">
+      <input type="number" id="bonus-custom-pts" placeholder="XP" min="1" max="20" value="5">
+      <button id="bonus-custom-add">+ Add</button>
+    </div>
+    <div id="bonus-today"></div>
+  </div>
+
+  <!-- Custom plan (each user adds their own exercises) -->
+  <div class="custom-card section-card">
+    <div class="section-head">
+      <div class="section-num">+</div>
+      <div style="flex:1;">
+        <div class="section-title">My Custom Plan</div>
+        <div class="section-meta" id="custom-meta">Add your own training items with times</div>
+      </div>
+    </div>
+    <div id="custom-items"></div>
+    <div class="custom-add-form">
+      <input type="text" id="custom-name" placeholder="e.g. Cardio run, Stretch session..." maxlength="60">
+      <input type="time" id="custom-time">
+      <button id="custom-add">+ Add</button>
+    </div>
+  </div>
+
+  <!-- Coach / Assistant schedule (only visible if user has 'assistant' role) -->
+  <div class="assist-card section-card" id="assist-card" style="display:none;">
+    <div class="section-head">
+      <div class="section-num">🤝</div>
+      <div style="flex:1;">
+        <div class="section-title">Coach Schedule</div>
+        <div class="section-meta" id="assist-meta">Plan team events — sync to your My Week planner</div>
+      </div>
+    </div>
+    <div id="assist-list"></div>
+    <div class="assist-add-form">
+      <select id="assist-day">
+        <option value="Mon">Mon</option>
+        <option value="Tue">Tue</option>
+        <option value="Wed">Wed</option>
+        <option value="Thu">Thu</option>
+        <option value="Fri">Fri</option>
+        <option value="Sat">Sat</option>
+        <option value="Sun">Sun</option>
+      </select>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <input type="text" id="assist-name" placeholder="Class or event name (e.g. Beginner Ballet)" maxlength="60">
+        <input type="text" id="assist-students" placeholder="Students (optional, comma-separated)" maxlength="200">
+      </div>
+      <input type="time" id="assist-time">
+      <button id="assist-add">+ Add</button>
+    </div>
+    <div class="assist-sync-bar" style="border-top:1px solid var(--card-border);">
+      <span class="note">Quick add:</span>
+      <button class="btn" id="preset-daily">📋 Daily Training (every day)</button>
+      <button class="btn" id="preset-practice">🤸 2 Team Practices (Tue + Thu)</button>
+    </div>
+    <div class="assist-sync-bar">
+      <span class="note">Copies the schedule to your clipboard so you can paste it into My Week.</span>
+      <button class="btn btn-primary" id="assist-sync">📤 Send to My Week</button>
+    </div>
+  </div>
+
+  <!-- Birthday calendar -->
+  <div class="birthdays-card section-card">
+    <div class="section-head">
+      <div class="section-num">🎂</div>
+      <div style="flex:1;">
+        <div class="section-title">Team Birthdays</div>
+        <div class="section-meta" id="birthdays-meta">Upcoming team birthdays</div>
+      </div>
+    </div>
+    <div id="birthdays-list"></div>
+    <div class="birthday-add-form">
+      <input type="text" id="bday-name" placeholder="Name" maxlength="30">
+      <input type="date" id="bday-date">
+      <button id="bday-add">+ Add</button>
+    </div>
+  </div>
+
+  <!-- Quotes wall -->
+  <div class="quotes-card section-card">
+    <div class="section-head">
+      <div class="section-num">💬</div>
+      <div style="flex:1;">
+        <div class="section-title">Quotes Wall</div>
+        <div class="section-meta" id="quotes-meta">Inside jokes &amp; iconic team moments</div>
+      </div>
+    </div>
+    <div id="quotes-list"></div>
+    <div class="quote-add-form">
+      <input type="text" id="quote-text" placeholder="Quote or inside joke..." maxlength="200">
+      <input type="text" id="quote-by" placeholder="Who said it" maxlength="30">
+      <button id="quote-add">+ Add</button>
+    </div>
+  </div>
+
+  <!-- Toast for notifications -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Livewire Expectations -->
+  <div class="expectations">
+    <h2>Livewire Expectations</h2>
+    <div class="sub">Every single day</div>
+    <div class="exp-grid">
+      <div>Point feet</div>
+      <div>Straight knees</div>
+      <div>Use control</div>
+      <div>Lift posture</div>
+      <div>Finish every movement</div>
+      <div>Energy through fingers</div>
+    </div>
+  </div>
+
+  <!-- Reminder -->
+  <div class="reminder">
+    <p><strong>Consistency creates results.</strong></p>
+    <p>Even 25 minutes a day will improve flexibility, build stronger technique, prevent injuries, increase confidence, and make dancers cleaner and more powerful.</p>
+    <p class="big">⚡ SMALL DAILY EFFORTS CREATE BIG RESULTS ⚡</p>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button class="btn" id="reset-btn">↻ Reset today</button>
+    <button class="btn" id="simple-toggle">🧘 Simple mode</button>
+    <button class="btn" id="admin-btn">⚙ Admin</button>
+  </div>
+
+  <!-- Admin panel -->
+  <div id="admin-panel" class="admin hidden">
+    <h2>Admin Controls</h2>
+    <label>Nationals date</label>
+    <input type="date" id="nationals-input">
+    <label>Practices remaining</label>
+    <input type="number" id="practices-input" min="0" step="1">
+    <div class="admin-actions">
+      <button class="btn btn-primary" id="save-admin">Save</button>
+      <button class="btn" id="cancel-admin">Cancel</button>
+    </div>
+  </div>
+</main>
+
+<script>
+/* ============================================================
+   LIVEWIRE DAILY
+   A daily training tracker for the Livewire dance team.
+   Stores data in browser localStorage (per-device, per-dancer).
+   ============================================================ */
+
+// ---------- Checklist content (from team handout) ----------
+const CHECKLIST = [
+  {
+    id: 'warmup',
+    num: '1',
+    title: 'Warm-Up',
+    meta: '5–7 minutes',
+    purpose: 'Keep your body safe by warming up properly.',
+    items: [
+      { id: 'team-warmup', name: 'Team warm-up',
+        how: ['Do the team warm up.'] }
+    ]
+  },
+  {
+    id: 'flexibility',
+    num: '2',
+    title: 'Flexibility Training',
+    meta: '10 minutes',
+    purpose: 'Increase flexibility safely and improve lines.',
+    items: [
+      { id: 'right-split', name: 'Right Split – hold 60–90 secs',
+        how: ['Square hips forward', 'Keep back leg straight', 'Sit tall instead of collapsing'],
+        good: ['Straight knees', 'Pointed toes', 'Go against wall if needed'],
+        bad: ['Do not roll open'] },
+      { id: 'left-split', name: 'Left Split – hold 60–90 secs',
+        how: ['Square hips forward', 'Keep back leg straight', 'Sit tall instead of collapsing'],
+        good: ['Straight knees', 'Pointed toes', 'Go against wall if needed'],
+        bad: ['Do not roll open'] },
+      { id: 'middle-split', name: 'Middle Split – hold 60–90 secs',
+        how: ['Legs straight', 'Legs in line with hips', 'Keep back long'],
+        good: ['Use forearms or belly'],
+        bad: ['No bent knees'] },
+      { id: 'windshield', name: 'Windshield Wiper Hip Openers – 20 total',
+        how: ['Sit with knees bent, feet wider than hips', 'Lean back with hands behind you', 'Drop knees slowly to one side, then the other'],
+        good: ['Move slowly and with control', 'Keep chest lifted'],
+        bad: [] },
+      { id: 'pike', name: 'Hamstring Pike Stretch – 3 × 30 secs',
+        how: ['Legs straight together in parallel', 'Reach chest toward legs', 'Alternate flex or point feet'],
+        good: ['Straight knees', 'Long spine'],
+        bad: ['No bouncing'] }
+    ]
+  },
+  {
+    id: 'strength',
+    num: '3',
+    title: 'Strength + Control',
+    meta: '10–15 minutes',
+    purpose: 'Build the strength needed for higher legs and stronger technique.',
+    items: [
+      { id: 'eleves', name: 'Elevés – 20 reps (10 parallel + 10 turnout 1st)',
+        how: ['Rise high onto balls of feet', 'Lower slowly', 'Keep ankles strong'],
+        good: ['Squished knees entire time', 'Lift tall through core'],
+        bad: ['No rolling ankles – stay over the middle toe'] },
+      { id: 'developpes', name: 'Slow Développés – 10 each side',
+        how: ['Lift knee slowly through passé to attitude', 'Extend leg fully', 'Lower with control to tendu close'],
+        good: ['Stay tall', 'Point feet'],
+        bad: ['No dropping leg quickly'] },
+      { id: 'leg-lifts', name: 'Leg Lifts – 10 each side',
+        how: ['Lie on your side', 'Lift leg slowly', 'Lower slowly'],
+        good: ['Straight knees and pointed toes', 'Controlled movement'],
+        bad: ['No swinging'] },
+      { id: 'plank', name: 'Plank – 45 seconds',
+        how: ['Elbows under shoulders', 'Flat back', 'Tight stomach'],
+        good: ['Squeeze core', 'Strong shoulders'],
+        bad: ['No sagging hips'] },
+      { id: 'deadlifts', name: 'Single Leg Deadlifts – 10 each side',
+        how: ['Stand on one leg', 'Hinge at hip, lift back leg behind you', 'Keep back flat, return with control'],
+        good: ['Straight knees', 'Square hips'],
+        bad: ['No rounding back'] }
+    ]
+  },
+  {
+    id: 'feet',
+    num: '4',
+    title: 'Feet + Point Work',
+    meta: '5–8 minutes',
+    purpose: 'Create stronger feet, prettier lines, and better pointe technique.',
+    items: [
+      { id: 'theraband', name: 'Theraband Point/Flex – 20 reps',
+        how: ['Wrap band around foot', 'Push through toes slowly', 'Return with control'],
+        good: ['Point through ankle and toes'],
+        bad: ['Do not crunch toes'] },
+      { id: 'articulation', name: 'Foot Articulation – 20 reps (Toe → Ball → Full Point)',
+        how: ['Move foot slowly through each position', 'Focus on smooth transitions'],
+        good: ['Knees squished', 'Fully stretched toes'],
+        bad: ['No sickling'] },
+      { id: 'scrunches', name: 'Toe Scrunches – 20 reps',
+        how: ['Place towel on floor', 'Grab towel using toes'],
+        good: ['Use entire foot', 'Keep heel grounded'],
+        bad: [] }
+    ]
+  }
+];
+
+// ---------- Defaults ----------
+// Default weekly schedule — straight from the team's printed sheet
+const DEFAULT_WEEKLY = {
+  Mon: 'Blackout Class',
+  Tue: 'Blackout Class',
+  Wed: 'Daily Training Checklist + 15 min yoga',
+  Thu: 'Daily Training Checklist + run through each dance',
+  Fri: 'Daily Training Checklist + 10 set of turns R & L each',
+  Sat: 'Daily Training Checklist + extra CLI',
+  Sun: 'Daily Training Checklist + assigned CLI'
+};
+const DEFAULTS = {
+  nationalsDate: '2026-07-01',
+  practicesRemaining: 30,
+  weekly: DEFAULT_WEEKLY
+};
+
+// ---------- Themes (16 aesthetics) ----------
+// Each theme defines the CSS variables that get applied to :root.
+const THEMES = {
+  electric: {
+    name: 'Electric', emoji: '⚡',
+    vars: {
+      '--bg': '#0a0a1f', '--bg-2': '#15152e',
+      '--bg-grad-1': 'rgba(255,45,146,0.18)', '--bg-grad-2': 'rgba(0,229,255,0.12)',
+      '--card': 'rgba(255,255,255,0.04)', '--card-border': 'rgba(255,255,255,0.08)',
+      '--text': '#f5f5fa', '--muted': '#9b9bb5',
+      '--pink': '#ff2d92', '--pink-glow': 'rgba(255,45,146,0.35)',
+      '--cyan': '#00e5ff', '--cyan-glow': 'rgba(0,229,255,0.3)',
+      '--yellow': '#ffe14a', '--on-accent': '#0a0a1f',
+      '--good': '#4ade80', '--bad': '#ff5470'
+    }
+  },
+  cotton: {
+    name: 'Cotton Candy', emoji: '🍭',
+    vars: {
+      '--bg': '#ffe4f1', '--bg-2': '#ffffff',
+      '--bg-grad-1': 'rgba(255,138,200,0.4)', '--bg-grad-2': 'rgba(170,200,255,0.4)',
+      '--card': 'rgba(255,255,255,0.6)', '--card-border': 'rgba(255,80,160,0.15)',
+      '--text': '#4a1a3c', '--muted': '#a87aa0',
+      '--pink': '#ff4fa2', '--pink-glow': 'rgba(255,79,162,0.4)',
+      '--cyan': '#8ec5ff', '--cyan-glow': 'rgba(142,197,255,0.4)',
+      '--yellow': '#c9a8ff', '--on-accent': '#ffffff',
+      '--good': '#4ade80', '--bad': '#ff5470'
+    }
+  },
+  sunset: {
+    name: 'Sunset', emoji: '🌅',
+    vars: {
+      '--bg': '#1a0a1a', '--bg-2': '#2a1525',
+      '--bg-grad-1': 'rgba(255,107,53,0.25)', '--bg-grad-2': 'rgba(255,210,90,0.18)',
+      '--card': 'rgba(255,200,150,0.06)', '--card-border': 'rgba(255,180,100,0.12)',
+      '--text': '#fff4e6', '--muted': '#b59a8e',
+      '--pink': '#ff6b35', '--pink-glow': 'rgba(255,107,53,0.4)',
+      '--cyan': '#ffa552', '--cyan-glow': 'rgba(255,165,82,0.4)',
+      '--yellow': '#ffd166', '--on-accent': '#2a0a00',
+      '--good': '#a3e635', '--bad': '#ff4444'
+    }
+  },
+  forest: {
+    name: 'Forest', emoji: '🌲',
+    vars: {
+      '--bg': '#0d1f15', '--bg-2': '#16302b',
+      '--bg-grad-1': 'rgba(109,190,106,0.18)', '--bg-grad-2': 'rgba(168,230,207,0.12)',
+      '--card': 'rgba(200,255,200,0.04)', '--card-border': 'rgba(168,230,207,0.1)',
+      '--text': '#e6f4ea', '--muted': '#8eaa95',
+      '--pink': '#6dbe6a', '--pink-glow': 'rgba(109,190,106,0.4)',
+      '--cyan': '#a8e6cf', '--cyan-glow': 'rgba(168,230,207,0.4)',
+      '--yellow': '#ffd166', '--on-accent': '#0d1f15',
+      '--good': '#86efac', '--bad': '#fb7185'
+    }
+  },
+  ocean: {
+    name: 'Ocean', emoji: '🌊',
+    vars: {
+      '--bg': '#001a2c', '--bg-2': '#002744',
+      '--bg-grad-1': 'rgba(0,212,255,0.2)', '--bg-grad-2': 'rgba(46,229,170,0.15)',
+      '--card': 'rgba(180,230,255,0.04)', '--card-border': 'rgba(180,230,255,0.1)',
+      '--text': '#e0f4ff', '--muted': '#7da3b8',
+      '--pink': '#00d4ff', '--pink-glow': 'rgba(0,212,255,0.4)',
+      '--cyan': '#2ee5aa', '--cyan-glow': 'rgba(46,229,170,0.4)',
+      '--yellow': '#ff7a90', '--on-accent': '#001a2c',
+      '--good': '#4ade80', '--bad': '#ff5470'
+    }
+  },
+  galaxy: {
+    name: 'Galaxy', emoji: '🌌',
+    vars: {
+      '--bg': '#000010', '--bg-2': '#100025',
+      '--bg-grad-1': 'rgba(180,106,255,0.2)', '--bg-grad-2': 'rgba(106,138,255,0.15)',
+      '--card': 'rgba(200,180,255,0.04)', '--card-border': 'rgba(180,150,255,0.12)',
+      '--text': '#f0e6ff', '--muted': '#9080b0',
+      '--pink': '#b46aff', '--pink-glow': 'rgba(180,106,255,0.4)',
+      '--cyan': '#6a8aff', '--cyan-glow': 'rgba(106,138,255,0.4)',
+      '--yellow': '#ffd700', '--on-accent': '#000010',
+      '--good': '#4ade80', '--bad': '#ff5470'
+    }
+  },
+  blossom: {
+    name: 'Blossom', emoji: '🌸',
+    vars: {
+      '--bg': '#fff5f7', '--bg-2': '#ffffff',
+      '--bg-grad-1': 'rgba(255,140,180,0.3)', '--bg-grad-2': 'rgba(180,230,200,0.25)',
+      '--card': 'rgba(255,200,220,0.3)', '--card-border': 'rgba(255,140,180,0.15)',
+      '--text': '#4a2530', '--muted': '#aa8090',
+      '--pink': '#ff6b9d', '--pink-glow': 'rgba(255,107,157,0.4)',
+      '--cyan': '#88c9a1', '--cyan-glow': 'rgba(136,201,161,0.4)',
+      '--yellow': '#ffb88c', '--on-accent': '#ffffff',
+      '--good': '#22c55e', '--bad': '#dc2626'
+    }
+  },
+  y2k: {
+    name: 'Y2K', emoji: '💿',
+    vars: {
+      '--bg': '#c8d4ff', '--bg-2': '#ffffff',
+      '--bg-grad-1': 'rgba(255,0,153,0.3)', '--bg-grad-2': 'rgba(0,221,255,0.3)',
+      '--card': 'rgba(255,255,255,0.6)', '--card-border': 'rgba(100,80,200,0.2)',
+      '--text': '#200a40', '--muted': '#6a5a90',
+      '--pink': '#ff0099', '--pink-glow': 'rgba(255,0,153,0.5)',
+      '--cyan': '#00ddff', '--cyan-glow': 'rgba(0,221,255,0.5)',
+      '--yellow': '#c8ff00', '--on-accent': '#ffffff',
+      '--good': '#22c55e', '--bad': '#dc2626'
+    }
+  },
+  cottage: {
+    name: 'Cottagecore', emoji: '🍄',
+    vars: {
+      '--bg': '#f5efe0', '--bg-2': '#fdfaf0',
+      '--bg-grad-1': 'rgba(201,138,138,0.2)', '--bg-grad-2': 'rgba(155,184,138,0.2)',
+      '--card': 'rgba(255,255,255,0.5)', '--card-border': 'rgba(138,122,90,0.15)',
+      '--text': '#3d3020', '--muted': '#8a7a5a',
+      '--pink': '#c98a8a', '--pink-glow': 'rgba(201,138,138,0.4)',
+      '--cyan': '#9bb88a', '--cyan-glow': 'rgba(155,184,138,0.4)',
+      '--yellow': '#e8c876', '--on-accent': '#fdfaf0',
+      '--good': '#22c55e', '--bad': '#dc2626'
+    }
+  },
+  cyber: {
+    name: 'Cyberpunk', emoji: '🤖',
+    vars: {
+      '--bg': '#000000', '--bg-2': '#0a0a14',
+      '--bg-grad-1': 'rgba(255,0,128,0.2)', '--bg-grad-2': 'rgba(0,255,255,0.15)',
+      '--card': 'rgba(0,255,160,0.04)', '--card-border': 'rgba(0,255,160,0.2)',
+      '--text': '#00ff9f', '--muted': '#008060',
+      '--pink': '#ff0080', '--pink-glow': 'rgba(255,0,128,0.5)',
+      '--cyan': '#00ffff', '--cyan-glow': 'rgba(0,255,255,0.5)',
+      '--yellow': '#ffe600', '--on-accent': '#000000',
+      '--good': '#00ff9f', '--bad': '#ff0080'
+    }
+  },
+  mini: {
+    name: 'Minimalist', emoji: '◻️',
+    vars: {
+      '--bg': '#fafafa', '--bg-2': '#ffffff',
+      '--bg-grad-1': 'rgba(0,0,0,0.02)', '--bg-grad-2': 'rgba(0,0,0,0.02)',
+      '--card': 'rgba(0,0,0,0.03)', '--card-border': 'rgba(0,0,0,0.1)',
+      '--text': '#0a0a0a', '--muted': '#808080',
+      '--pink': '#0a0a0a', '--pink-glow': 'rgba(0,0,0,0.2)',
+      '--cyan': '#0a0a0a', '--cyan-glow': 'rgba(0,0,0,0.2)',
+      '--yellow': '#404040', '--on-accent': '#ffffff',
+      '--good': '#16a34a', '--bad': '#dc2626'
+    }
+  },
+  vapor: {
+    name: 'Vaporwave', emoji: '🌴',
+    vars: {
+      '--bg': '#1d0040', '--bg-2': '#2c0066',
+      '--bg-grad-1': 'rgba(255,119,255,0.25)', '--bg-grad-2': 'rgba(0,240,255,0.18)',
+      '--card': 'rgba(255,200,255,0.05)', '--card-border': 'rgba(255,119,255,0.18)',
+      '--text': '#ffeaff', '--muted': '#b48dd6',
+      '--pink': '#ff77ff', '--pink-glow': 'rgba(255,119,255,0.5)',
+      '--cyan': '#00f0ff', '--cyan-glow': 'rgba(0,240,255,0.5)',
+      '--yellow': '#ffe14a', '--on-accent': '#1d0040',
+      '--good': '#4ade80', '--bad': '#ff5470'
+    }
+  },
+  strawberry: {
+    name: 'Strawberry', emoji: '🍓',
+    vars: {
+      '--bg': '#fff5f3', '--bg-2': '#ffffff',
+      '--bg-grad-1': 'rgba(224,32,60,0.18)', '--bg-grad-2': 'rgba(103,201,125,0.15)',
+      '--card': 'rgba(255,220,220,0.5)', '--card-border': 'rgba(224,32,60,0.15)',
+      '--text': '#4a1414', '--muted': '#b07070',
+      '--pink': '#e0203c', '--pink-glow': 'rgba(224,32,60,0.4)',
+      '--cyan': '#ff80a8', '--cyan-glow': 'rgba(255,128,168,0.4)',
+      '--yellow': '#67c97d', '--on-accent': '#ffffff',
+      '--good': '#16a34a', '--bad': '#991b1b'
+    }
+  },
+  lavender: {
+    name: 'Lavender', emoji: '💜',
+    vars: {
+      '--bg': '#e8def5', '--bg-2': '#f8f4ff',
+      '--bg-grad-1': 'rgba(155,109,255,0.25)', '--bg-grad-2': 'rgba(205,168,255,0.25)',
+      '--card': 'rgba(255,255,255,0.5)', '--card-border': 'rgba(155,109,255,0.18)',
+      '--text': '#2a1a4a', '--muted': '#807090',
+      '--pink': '#9b6dff', '--pink-glow': 'rgba(155,109,255,0.4)',
+      '--cyan': '#cda8ff', '--cyan-glow': 'rgba(205,168,255,0.4)',
+      '--yellow': '#f5c45e', '--on-accent': '#ffffff',
+      '--good': '#16a34a', '--bad': '#dc2626'
+    }
+  },
+  coquette: {
+    name: 'Coquette', emoji: '🎀',
+    vars: {
+      '--bg': '#ffe1e9', '--bg-2': '#fff5f8',
+      '--bg-grad-1': 'rgba(255,92,168,0.3)', '--bg-grad-2': 'rgba(255,168,200,0.3)',
+      '--card': 'rgba(255,255,255,0.5)', '--card-border': 'rgba(255,92,168,0.2)',
+      '--text': '#4a1a2a', '--muted': '#b070a0',
+      '--pink': '#ff5ca8', '--pink-glow': 'rgba(255,92,168,0.4)',
+      '--cyan': '#ffa8c8', '--cyan-glow': 'rgba(255,168,200,0.4)',
+      '--yellow': '#ffd4c8', '--on-accent': '#ffffff',
+      '--good': '#22c55e', '--bad': '#dc2626'
+    }
+  },
+  tangerine: {
+    name: 'Tangerine', emoji: '🍊',
+    vars: {
+      '--bg': '#2a0a00', '--bg-2': '#3a1a05',
+      '--bg-grad-1': 'rgba(255,122,24,0.25)', '--bg-grad-2': 'rgba(255,186,90,0.2)',
+      '--card': 'rgba(255,200,150,0.05)', '--card-border': 'rgba(255,186,90,0.15)',
+      '--text': '#fff5e6', '--muted': '#b09080',
+      '--pink': '#ff7a18', '--pink-glow': 'rgba(255,122,24,0.4)',
+      '--cyan': '#ffba5a', '--cyan-glow': 'rgba(255,186,90,0.4)',
+      '--yellow': '#ffe680', '--on-accent': '#2a0a00',
+      '--good': '#a3e635', '--bad': '#ff4444'
+    }
+  },
+  // ─── Artist-era inspired themes ───
+  eras: {
+    name: 'Eras Tour', emoji: '💝',
+    vars: {
+      '--bg': '#fff4ed', '--bg-2': '#fffaf5',
+      '--bg-grad-1': 'rgba(212,158,128,0.3)', '--bg-grad-2': 'rgba(201,48,62,0.15)',
+      '--card': 'rgba(255,220,200,0.4)', '--card-border': 'rgba(180,100,80,0.2)',
+      '--text': '#4a2818', '--muted': '#a88a78',
+      '--pink': '#c9303e', '--pink-glow': 'rgba(201,48,62,0.4)',
+      '--cyan': '#d4945a', '--cyan-glow': 'rgba(212,148,90,0.4)',
+      '--yellow': '#ffc8a8', '--on-accent': '#fffaf5',
+      '--good': '#16a34a', '--bad': '#991b1b'
+    }
+  },
+  sour: {
+    name: 'Sour', emoji: '💜',
+    vars: {
+      '--bg': '#1a0a3a', '--bg-2': '#2c1450',
+      '--bg-grad-1': 'rgba(255,62,150,0.25)', '--bg-grad-2': 'rgba(180,141,255,0.2)',
+      '--card': 'rgba(255,200,255,0.05)', '--card-border': 'rgba(180,141,255,0.18)',
+      '--text': '#f0e6ff', '--muted': '#9080b0',
+      '--pink': '#ff3e96', '--pink-glow': 'rgba(255,62,150,0.5)',
+      '--cyan': '#b48dff', '--cyan-glow': 'rgba(180,141,255,0.45)',
+      '--yellow': '#e2b6ff', '--on-accent': '#1a0a3a',
+      '--good': '#4ade80', '--bad': '#ff5470'
+    }
+  },
+  espresso: {
+    name: 'Espresso', emoji: '☕',
+    vars: {
+      '--bg': '#f4ecdf', '--bg-2': '#fff8e8',
+      '--bg-grad-1': 'rgba(255,107,157,0.22)', '--bg-grad-2': 'rgba(107,68,35,0.15)',
+      '--card': 'rgba(255,255,255,0.5)', '--card-border': 'rgba(107,68,35,0.2)',
+      '--text': '#3d2410', '--muted': '#9a7a5a',
+      '--pink': '#ff6b9d', '--pink-glow': 'rgba(255,107,157,0.4)',
+      '--cyan': '#8b4f2a', '--cyan-glow': 'rgba(139,79,42,0.4)',
+      '--yellow': '#e8c876', '--on-accent': '#fff8e8',
+      '--good': '#16a34a', '--bad': '#dc2626'
+    }
+  },
+  renaissance: {
+    name: 'Renaissance', emoji: '✨',
+    vars: {
+      '--bg': '#080808', '--bg-2': '#181818',
+      '--bg-grad-1': 'rgba(255,215,0,0.2)', '--bg-grad-2': 'rgba(255,128,200,0.15)',
+      '--card': 'rgba(255,255,255,0.04)', '--card-border': 'rgba(255,215,0,0.2)',
+      '--text': '#f4f4f4', '--muted': '#a0a0a8',
+      '--pink': '#ffd700', '--pink-glow': 'rgba(255,215,0,0.5)',
+      '--cyan': '#d4d4dc', '--cyan-glow': 'rgba(212,212,220,0.4)',
+      '--yellow': '#ff80c8', '--on-accent': '#080808',
+      '--good': '#4ade80', '--bad': '#ff5470'
+    }
+  },
+  brat: {
+    name: 'Brat', emoji: '💚',
+    vars: {
+      '--bg': '#000000', '--bg-2': '#0a0a0a',
+      '--bg-grad-1': 'rgba(138,204,0,0.2)', '--bg-grad-2': 'rgba(138,204,0,0.1)',
+      '--card': 'rgba(138,204,0,0.04)', '--card-border': 'rgba(138,204,0,0.3)',
+      '--text': '#ffffff', '--muted': '#6a8030',
+      '--pink': '#8acc00', '--pink-glow': 'rgba(138,204,0,0.6)',
+      '--cyan': '#a8ee20', '--cyan-glow': 'rgba(168,238,32,0.5)',
+      '--yellow': '#ffffff', '--on-accent': '#000000',
+      '--good': '#8acc00', '--bad': '#ff0080'
+    }
+  },
+  pinkpony: {
+    name: 'Pink Pony', emoji: '🐎',
+    vars: {
+      '--bg': '#ff80b3', '--bg-2': '#ffb3d1',
+      '--bg-grad-1': 'rgba(255,0,128,0.35)', '--bg-grad-2': 'rgba(255,222,128,0.25)',
+      '--card': 'rgba(255,255,255,0.4)', '--card-border': 'rgba(180,0,90,0.25)',
+      '--text': '#3a0018', '--muted': '#a04060',
+      '--pink': '#ff0080', '--pink-glow': 'rgba(255,0,128,0.5)',
+      '--cyan': '#ffde80', '--cyan-glow': 'rgba(255,222,128,0.5)',
+      '--yellow': '#fff0f5', '--on-accent': '#ffffff',
+      '--good': '#16a34a', '--bad': '#991b1b'
+    }
+  },
+  sweetener: {
+    name: 'Sweetener', emoji: '🍯',
+    vars: {
+      '--bg': '#fdf6f0', '--bg-2': '#ffffff',
+      '--bg-grad-1': 'rgba(255,179,209,0.35)', '--bg-grad-2': 'rgba(200,184,255,0.3)',
+      '--card': 'rgba(255,240,235,0.5)', '--card-border': 'rgba(255,179,209,0.25)',
+      '--text': '#3d2030', '--muted': '#b09098',
+      '--pink': '#ff80b3', '--pink-glow': 'rgba(255,128,179,0.4)',
+      '--cyan': '#c8b8ff', '--cyan-glow': 'rgba(200,184,255,0.4)',
+      '--yellow': '#ffe1c5', '--on-accent': '#ffffff',
+      '--good': '#22c55e', '--bad': '#dc2626'
+    }
+  },
+  disco: {
+    name: 'Disco', emoji: '🪩',
+    vars: {
+      '--bg': '#20003a', '--bg-2': '#300050',
+      '--bg-grad-1': 'rgba(255,215,0,0.22)', '--bg-grad-2': 'rgba(255,126,179,0.2)',
+      '--card': 'rgba(255,215,150,0.06)', '--card-border': 'rgba(255,215,0,0.22)',
+      '--text': '#ffeaff', '--muted': '#b090c0',
+      '--pink': '#ffd700', '--pink-glow': 'rgba(255,215,0,0.5)',
+      '--cyan': '#ff7eb3', '--cyan-glow': 'rgba(255,126,179,0.45)',
+      '--yellow': '#d4d4dc', '--on-accent': '#20003a',
+      '--good': '#4ade80', '--bad': '#ff5470'
+    }
+  }
+};
+
+const DEFAULT_THEME = 'electric';
+
+// ---------- Per-theme fonts ----------
+// Each theme gets a matching font family (Mac system fonts so no external loads).
+const THEME_FONTS = {
+  electric:    '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif',
+  cotton:      '"Comic Sans MS", "Marker Felt", cursive',
+  sunset:      '"Optima", "Avenir", system-ui, serif',
+  forest:      'Georgia, "Hoefler Text", serif',
+  ocean:       '"Avenir Next", "Avenir", system-ui, sans-serif',
+  galaxy:      'Futura, "Trebuchet MS", system-ui, sans-serif',
+  blossom:     '"Snell Roundhand", "Brush Script MT", "Bradley Hand", cursive',
+  y2k:         '"Courier New", "Lucida Console", monospace',
+  cottage:     '"American Typewriter", "Courier New", serif',
+  cyber:       '"Menlo", "Monaco", "Courier New", monospace',
+  mini:        '"Helvetica Neue", Helvetica, Arial, sans-serif',
+  vapor:       '"Didot", "Bodoni 72", serif',
+  strawberry:  '"Marker Felt", "Comic Sans MS", cursive',
+  lavender:    '"Optima", "Avenir", serif',
+  coquette:    '"Bradley Hand", "Marker Felt", "Snell Roundhand", cursive',
+  tangerine:   '"Futura", "Trebuchet MS", sans-serif',
+  eras:        '"Didot", "Bodoni 72", "Times New Roman", serif',
+  sour:        '"Impact", "Arial Black", sans-serif',
+  espresso:    '"Avenir", "Futura", sans-serif',
+  renaissance: '"Didot", "Bodoni 72", serif',
+  brat:        '"Arial", "Helvetica Neue", sans-serif',
+  pinkpony:    '"Snell Roundhand", "Brush Script MT", cursive',
+  sweetener:   '"Bradley Hand", "Marker Felt", cursive',
+  disco:       '"Futura", "Avenir", sans-serif'
+};
+
+function applyTheme(themeId) {
+  // Custom team theme branch
+  if (themeId === 'custom') {
+    const colors = loadJSON(KEYS.customTheme(), null);
+    if (colors) {
+      applyCustomTheme(colors);
+      return;
+    }
+    // No custom colors saved — fall back to default
+    themeId = DEFAULT_THEME;
+  }
+  const theme = THEMES[themeId] || THEMES[DEFAULT_THEME];
+  Object.entries(theme.vars).forEach(([k, v]) => {
+    document.documentElement.style.setProperty(k, v);
+  });
+  // Apply matching font
+  const font = THEME_FONTS[themeId] || THEME_FONTS[DEFAULT_THEME];
+  document.documentElement.style.setProperty('--font', font);
+}
+
+// ---------- Color helpers for custom theme ----------
+function hexToRgba(hex, a) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function isDarkColor(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
+}
+function shadeHex(hex, pct) {
+  let r = parseInt(hex.slice(1, 3), 16);
+  let g = parseInt(hex.slice(3, 5), 16);
+  let b = parseInt(hex.slice(5, 7), 16);
+  const add = Math.round(pct * 2.55);
+  r = Math.max(0, Math.min(255, r + add));
+  g = Math.max(0, Math.min(255, g + add));
+  b = Math.max(0, Math.min(255, b + add));
+  return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
+function applyCustomTheme(c) {
+  const dark = isDarkColor(c.bg);
+  const vars = {
+    '--bg': c.bg,
+    '--bg-2': shadeHex(c.bg, dark ? 7 : -5),
+    '--bg-grad-1': hexToRgba(c.pink, 0.2),
+    '--bg-grad-2': hexToRgba(c.cyan, 0.15),
+    '--card': hexToRgba(c.text, dark ? 0.04 : 0.06),
+    '--card-border': hexToRgba(c.text, 0.15),
+    '--text': c.text,
+    '--muted': hexToRgba(c.text, 0.55),
+    '--pink': c.pink,
+    '--pink-glow': hexToRgba(c.pink, 0.4),
+    '--cyan': c.cyan,
+    '--cyan-glow': hexToRgba(c.cyan, 0.4),
+    '--yellow': c.yellow,
+    '--on-accent': isDarkColor(c.pink) ? '#ffffff' : '#0a0a0a',
+    '--good': '#4ade80',
+    '--bad': '#ff5470',
+    '--font': c.font || '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif'
+  };
+  Object.entries(vars).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
+}
+
+// ---------- Storage helpers ----------
+// All per-user keys are namespaced by team so each "team room" has separate data.
+const TEAM = () => (dancer && dancer.team) || 'Livewire';
+const KEYS = {
+  // Not team-scoped: dancer profile + device-wide theme preference
+  dancer: 'livewire.dancer',
+  theme: 'livewire.theme',
+  // Team-scoped: each team has its own settings + custom theme
+  shared: () => `livewire.${TEAM()}.shared`,
+  customTheme: () => `livewire.${TEAM()}.customTheme`,
+  // Per-user, per-team
+  checksFor:    (name) => `livewire.${TEAM()}.checks.${name}`,
+  historyFor:   (name) => `livewire.${TEAM()}.history.${name}`,
+  scheduleFor:  (name) => `livewire.${TEAM()}.schedule.${name}`,
+  customFor:    (name) => `livewire.${TEAM()}.custom.${name}`,
+  assistFor:    (name) => `livewire.${TEAM()}.assist.${name}`,
+  weekChecksFor:(name) => `livewire.${TEAM()}.weekchecks.${name}`,
+  weeklyFor:    (name) => `livewire.${TEAM()}.weekly.${name}`,
+  compsFor:     (name) => `livewire.${TEAM()}.comps.${name}`,
+  // Per-user badge unlocks
+  badgesFor:    (name) => `livewire.${TEAM()}.badges.${name}`,
+  // Per-user XP (lifetime) + xpToday (resets daily, tracks bonuses)
+  xpFor:        (name) => `livewire.${TEAM()}.xp.${name}`,
+  xpTodayFor:   (name) => `livewire.${TEAM()}.xptoday.${name}`,
+  // Team-shared: motto string, quotes wall, birthdays map { name: "MM-DD" }
+  motto:        () => `livewire.${TEAM()}.motto`,
+  quotes:       () => `livewire.${TEAM()}.quotes`,
+  birthdays:    () => `livewire.${TEAM()}.birthdays`
+};
+
+function loadJSON(key, fallback) {
+  try {
+    let raw = localStorage.getItem(key);
+    // Migration: if this is a team-scoped key with no data, fall back to the legacy un-scoped key
+    if (raw === null) {
+      const m = key.match(/^livewire\.[^.]+\.(.+)$/);
+      if (m) raw = localStorage.getItem('livewire.' + m[1]);
+    }
+    return raw !== null ? JSON.parse(raw) : fallback;
+  } catch { return fallback; }
+}
+function saveJSON(key, val) {
+  localStorage.setItem(key, JSON.stringify(val));
+}
+function today() {
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+function daysBetween(fromISO, toISO) {
+  const a = new Date(fromISO + 'T00:00:00');
+  const b = new Date(toISO + 'T00:00:00');
+  return Math.round((b - a) / 86400000);
+}
+
+// ---------- State ----------
+let dancer = loadJSON(KEYS.dancer, null);   // { name, role }
+// `shared` gets loaded inside loadDancerData (after team is known)
+let shared = { ...DEFAULTS };
+let checks = {};    // { itemId: true } for today
+let history = [];   // ['2026-05-23', ...] – dates completed
+let schedule = {};  // { sectionId: 'HH:MM' } – planned times per section
+let customItems = []; // [{ id, name, time }, ...] – per-user custom exercises
+let assistEvents = []; // [{ id, day, name, time }, ...] – assistant/coach weekly events
+let weekChecks = {}; // { 'YYYY-MM-DD': true } – which dates the dancer has completed
+let weekViewOffset = 0; // 0 = this week, -1 = last week, etc.
+let weekly = {};    // per-user weekly schedule (teachers can edit theirs)
+let comps = [];     // [{ id, name, date, location, placement, score, notes }]
+let motto = '';     // team motto string (shared per team)
+let quotes = [];    // [{id, text, by, ts}] (shared per team)
+let birthdays = {}; // { "Mia": "MM-DD" } (shared per team)
+let badges = [];    // [badgeId, ...] unlocked by this user
+let xp = 0;         // lifetime XP for this user (per team)
+let xpToday = { date: '', earned: 0, bonuses: [], dailyBonusGiven: false };
+// Device-wide UI preference: hides Achievements / Bonus Training / Power Level / Quotes Wall
+let simpleMode = localStorage.getItem('livewire.simpleMode') === 'true';
+
+// Competition off-season: Jul 6 → Aug 31 each year
+function isOffSeason() {
+  const d = new Date();
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  if (m === 7 && day >= 6) return true;
+  if (m === 8) return true;
+  return false;
+}
+
+const allItems = CHECKLIST.flatMap(s => s.items.map(i => i.id));
+
+// ---------- Power Levels (XP titles) ----------
+const LEVELS = [
+  { min: 0,    title: 'Rookie',      emoji: '🌱' },
+  { min: 100,  title: 'Striver',     emoji: '✨' },
+  { min: 250,  title: 'Sparkler',    emoji: '⚡' },
+  { min: 500,  title: 'Star',        emoji: '🌟' },
+  { min: 1000, title: 'Showstopper', emoji: '💫' },
+  { min: 1750, title: 'Captain',     emoji: '🎖️' },
+  { min: 2750, title: 'Headliner',   emoji: '🔥' },
+  { min: 4000, title: 'Phenom',      emoji: '💎' },
+  { min: 6000, title: 'Legend',      emoji: '👑' },
+  { min: 9000, title: 'Livewire',    emoji: '⚡' }
+];
+
+function levelInfo(amount) {
+  let idx = 0;
+  for (let i = 0; i < LEVELS.length; i++) {
+    if (amount >= LEVELS[i].min) idx = i;
+  }
+  const cur = LEVELS[idx];
+  const next = LEVELS[idx + 1] || null;
+  return {
+    levelNum: idx + 1,
+    title: cur.title,
+    emoji: cur.emoji,
+    progress: next ? (amount - cur.min) / (next.min - cur.min) : 1,
+    nextMin: next ? next.min : null,
+    nextTitle: next ? next.title : null,
+    nextEmoji: next ? next.emoji : null,
+    toNext: next ? next.min - amount : 0,
+    isMax: !next
+  };
+}
+
+function streakMultiplier() {
+  const s = computeStreak();
+  if (s >= 30) return 5;
+  if (s >= 14) return 4;
+  if (s >= 7)  return 3;
+  if (s >= 3)  return 2;
+  return 1;
+}
+
+// Bonus training presets — extra effort earns extra XP
+const BONUS_PRESETS = [
+  { id: 'stretch',  emoji: '🤸',  name: 'Extra stretches',    pts: 5 },
+  { id: 'reps',     emoji: '💪',  name: 'Extra reps round',   pts: 5 },
+  { id: 'mental',   emoji: '🧠',  name: 'Mental run-through', pts: 5 },
+  { id: 'cardio',   emoji: '🏃',  name: 'Cardio session',     pts: 10 },
+  { id: 'routine',  emoji: '🎵',  name: 'Routine run',        pts: 10 },
+  { id: 'session',  emoji: '⏱️', name: '30 min extra',        pts: 15 }
+];
+
+// ---------- Daily affirmations (rotates by day of year) ----------
+const AFFIRMATIONS = [
+  "Today's effort is tomorrow's win.",
+  "Small reps. Big results. Trust the process.",
+  "You don't have to be perfect — just show up.",
+  "Strong dancers were once exhausted beginners.",
+  "Point your feet like you mean it.",
+  "Discipline is a love letter to your future self.",
+  "Champions are made when no one's watching.",
+  "Be the energy you want on stage.",
+  "One good rep is better than ten lazy ones.",
+  "Stretch the muscle AND the patience.",
+  "Confidence is a skill. Practice it daily.",
+  "You're not behind. You're on your own timeline.",
+  "The stage rewards repetition.",
+  "Move like the audience is already cheering.",
+  "Your body remembers what you teach it.",
+  "Soft start, sharp finish. Always.",
+  "Tired is temporary. Quitting lasts.",
+  "Dance full out, even in warm-ups.",
+  "Polish the basics. They're never basic.",
+  "Comparison is a thief — focus on YOUR craft.",
+  "Be coachable. It's the cheat code.",
+  "The best dancers ask the most questions.",
+  "Energy is a choice. Choose to bring it.",
+  "Tiny corrections, huge transformations.",
+  "Today's struggle is tomorrow's muscle memory.",
+  "Don't just finish — finish CLEAN.",
+  "Show up for past-you who was scared to start.",
+  "Greatness loves a good warm-up.",
+  "You vs. you. Always.",
+  "The little things ARE the big things.",
+  "Find your edge. Then push past it.",
+  "Bad days build great dancers.",
+  "Stretch deeper. Breathe slower. Try again.",
+  "Posture says everything before you move.",
+  "Make the hard things look easy.",
+  "Mood is contagious — pick a good one.",
+  "Be five percent better than yesterday.",
+  "Eyes up. Chest out. Own the room.",
+  "Reps make instincts.",
+  "Done > perfect. Move first, refine second.",
+  "Your warm-up is your wake-up call.",
+  "Train the brain too — visualize the routine.",
+  "Hydrate. Stretch. Repeat. Win.",
+  "If it scares you a little, you're growing.",
+  "Stay loose, dance tight.",
+  "Quiet work makes loud results.",
+  "Trust the choreography. Trust your training.",
+  "Every rep is a vote for who you're becoming.",
+  "Sweat now, shine later.",
+  "Make it look effortless. Earn it backstage."
+];
+
+function todaysAffirmation() {
+  const d = new Date();
+  // Day-of-year so all teammates see the same affirmation today
+  const start = new Date(d.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((d - start) / 86400000);
+  return AFFIRMATIONS[dayOfYear % AFFIRMATIONS.length];
+}
+
+// ---------- Badges ----------
+// Each badge has a `check(stats)` that returns true if the user qualifies.
+const BADGES = [
+  { id: 'first-step',    emoji: '✨', name: 'First Step',    desc: 'Check off any exercise',         check: s => s.totalChecksEver >= 1 },
+  { id: 'full-day',      emoji: '🌟', name: 'Full Send',     desc: 'Finish a whole day',             check: s => s.daysCompleted >= 1 },
+  { id: 'streak-3',      emoji: '🔥', name: 'On Fire',       desc: '3 days in a row',                check: s => s.streak >= 3 },
+  { id: 'streak-7',      emoji: '⚡', name: 'Livewire',      desc: '7-day streak',                   check: s => s.streak >= 7 },
+  { id: 'streak-30',     emoji: '💎', name: 'Diamond',       desc: '30-day streak',                  check: s => s.streak >= 30 },
+  { id: 'streak-100',    emoji: '👑', name: 'Royalty',       desc: '100-day streak',                 check: s => s.streak >= 100 },
+  { id: 'first-comp',    emoji: '🏆', name: 'Game On',       desc: 'Log a competition',              check: s => s.compCount >= 1 },
+  { id: 'comp-vet',      emoji: '🎖️', name: 'Veteran',       desc: '10 comps logged',                check: s => s.compCount >= 10 },
+  { id: 'podium',        emoji: '🥇', name: 'Podium',        desc: 'Record a placement',             check: s => s.placements >= 1 },
+  { id: 'first-custom',  emoji: '➕', name: 'Personalized',  desc: 'Add a custom item',              check: s => s.customCount >= 1 },
+  { id: 'planner',       emoji: '🕐', name: 'Planner',       desc: 'Schedule a section',             check: s => s.scheduledCount >= 1 },
+  { id: 'first-quote',   emoji: '💬', name: 'Memory Maker',  desc: 'Add to the quotes wall',         check: s => s.quoteCount >= 1 },
+  { id: 'motto-set',     emoji: '📣', name: 'Voice',         desc: 'Set a team motto',               check: s => s.hasMotto },
+  { id: 'designer',      emoji: '🎨', name: 'Designer',      desc: 'Make a custom theme',            check: s => s.hasCustomTheme },
+  { id: 'team-roster',   emoji: '🎂', name: 'Roster Builder',desc: 'Add 3 birthdays',                check: s => s.birthdayCount >= 3 },
+  { id: 'week-clean',    emoji: '🌈', name: 'Clean Week',    desc: '5 weekly checks done',           check: s => s.weekChecks >= 5 },
+  { id: 'first-bonus',   emoji: '🔥', name: 'Bonus Hunter',  desc: 'Log a bonus training',           check: s => s.bonusCount >= 1 },
+  { id: 'big-grind',     emoji: '🚀', name: 'Big Grind',     desc: 'Earn 50+ XP in a day',           check: s => s.todayXp >= 50 },
+  { id: 'mega-grind',    emoji: '🌋', name: 'Mega Grind',    desc: 'Earn 100+ XP in a day',          check: s => s.todayXp >= 100 },
+  { id: 'level-star',    emoji: '🌟', name: 'Star Status',   desc: 'Reach Lv 4 Star',                check: s => s.level >= 4 },
+  { id: 'level-cap',     emoji: '🎖️', name: 'Captain Tier',  desc: 'Reach Lv 6 Captain',             check: s => s.level >= 6 },
+  { id: 'level-max',     emoji: '⚡', name: 'Maxed Out',     desc: 'Reach Lv 10 Livewire',           check: s => s.level >= 10 }
+];
+
+function badgeStats() {
+  return {
+    totalChecksEver: Object.values(checks).filter(Boolean).length + (history.length * allItems.length),
+    daysCompleted: history.length,
+    streak: computeStreak(),
+    compCount: comps.length,
+    placements: comps.filter(c => c.placement && c.placement.trim()).length,
+    customCount: customItems.length,
+    scheduledCount: Object.values(schedule).filter(Boolean).length,
+    quoteCount: quotes.length,
+    hasMotto: !!(motto && motto.trim()),
+    hasCustomTheme: !!loadJSON(KEYS.customTheme(), null),
+    birthdayCount: Object.keys(birthdays).length,
+    weekChecks: Object.values(weekChecks).filter(Boolean).length,
+    bonusCount: (xpToday.bonuses && xpToday.bonuses.length) || 0,
+    todayXp: xpToday.earned || 0,
+    level: levelInfo(xp).levelNum
+  };
+}
+
+function checkBadges(opts = {}) {
+  const stats = badgeStats();
+  const newlyUnlocked = [];
+  BADGES.forEach(b => {
+    if (!badges.includes(b.id) && b.check(stats)) {
+      badges.push(b.id);
+      newlyUnlocked.push(b);
+    }
+  });
+  if (newlyUnlocked.length) {
+    saveJSON(KEYS.badgesFor(dancer.name), badges);
+    renderBadges();
+    if (!opts.silent) {
+      newlyUnlocked.forEach((b, i) => {
+        setTimeout(() => showBadgeUnlock(b), i * 1800);
+      });
+    }
+  }
+}
+
+// ---------- Confetti / sparkle ----------
+// Returns the colors used by the active theme (or custom theme), so confetti
+// matches the vibe instead of looking like generic party confetti every time.
+function themeColors() {
+  const cs = getComputedStyle(document.documentElement);
+  const v = (name) => cs.getPropertyValue(name).trim();
+  const base = [v('--pink'), v('--cyan'), v('--yellow')].filter(Boolean);
+  // Add a couple of derived tints so it doesn't look like 3 colors only
+  const extras = [];
+  try {
+    extras.push(shadeHex(v('--pink'), 20));
+    extras.push(shadeHex(v('--cyan'), -15));
+    extras.push(shadeHex(v('--yellow'), 15));
+  } catch {}
+  const all = [...base, ...extras].filter(c => c && c !== '');
+  return all.length ? all : ['#ff2d92', '#00e5ff', '#ffe14a'];
+}
+
+function confetti(opts = {}) {
+  const count = opts.count || 60;
+  const colors = opts.colors || themeColors();
+  let container = document.querySelector('.confetti-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'confetti-container';
+    document.body.appendChild(container);
+  }
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = (Math.random() * 0.4) + 's';
+    piece.style.animationDuration = (1.4 + Math.random() * 1.2) + 's';
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+    container.appendChild(piece);
+    setTimeout(() => piece.remove(), 3000);
+  }
+}
+
+function sparkleBurst(x, y, count = 8) {
+  for (let i = 0; i < count; i++) {
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    s.textContent = ['✨','⭐','💫','✦'][i % 4];
+    s.style.left = x + 'px';
+    s.style.top = y + 'px';
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.3;
+    const dist = 40 + Math.random() * 40;
+    s.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    s.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 1300);
+  }
+}
+
+function showBadgeUnlock(badge) {
+  if (simpleMode) return; // No badge popups in simple mode
+  const t = document.createElement('div');
+  t.className = 'badge-toast';
+  t.innerHTML = `
+    <div class="badge-toast-emoji">${badge.emoji}</div>
+    <div>
+      <div class="badge-toast-label">BADGE UNLOCKED</div>
+      <div class="badge-toast-name">${escapeHtml(badge.name)}</div>
+    </div>
+  `;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
+  confetti({ count: 90 });
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 500);
+  }, 2800);
+}
+
+// ---------- XP helpers ----------
+function addXP(amount, opts = {}) {
+  if (!amount) return;
+  const oldLv = levelInfo(xp).levelNum;
+  xp = Math.max(0, xp + amount);
+  saveXP();
+  xpToday.earned = Math.max(0, (xpToday.earned || 0) + amount);
+  saveXPToday();
+  const newLv = levelInfo(xp).levelNum;
+  if (newLv > oldLv && !opts.silent && !simpleMode) {
+    const lv = levelInfo(xp);
+    confetti({ count: 140 });
+    toast(`⚡ LEVEL UP! Lv ${newLv} ${lv.emoji} ${lv.title}`, 3500);
+  }
+  renderPowerLevel();
+  if (!opts.skipBadges) checkBadges();
+}
+
+function addBonus(name, basePts, emoji) {
+  const mult = streakMultiplier();
+  const pts = basePts * mult;
+  const entry = {
+    id: 'b-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+    name, basePts, pts, emoji, ts: Date.now()
+  };
+  xpToday.bonuses = xpToday.bonuses || [];
+  xpToday.bonuses.push(entry);
+  saveXPToday();
+  addXP(pts);
+  renderBonus();
+  toast(`+${pts} XP — ${name}${mult > 1 ? ` (×${mult} streak!)` : ''}`);
+}
+
+function removeBonus(id) {
+  const idx = (xpToday.bonuses || []).findIndex(b => b.id === id);
+  if (idx === -1) return;
+  const entry = xpToday.bonuses[idx];
+  xpToday.bonuses.splice(idx, 1);
+  saveXPToday();
+  addXP(-entry.pts, { silent: true });
+  renderBonus();
+}
+
+// ---------- Power Level renderer ----------
+function renderPowerLevel() {
+  const info = levelInfo(xp);
+  document.getElementById('power-emoji').textContent = info.emoji;
+  document.getElementById('power-lv').textContent = `Lv ${info.levelNum}`;
+  document.getElementById('power-title').textContent = info.title;
+  document.getElementById('power-xp').textContent = xp.toLocaleString();
+  const fill = document.getElementById('power-fill');
+  fill.style.width = (Math.min(1, info.progress) * 100).toFixed(1) + '%';
+  const nextEl = document.getElementById('power-next');
+  if (info.isMax) {
+    nextEl.innerHTML = '<span style="color:var(--yellow); font-weight:800;">MAX LEVEL ⚡</span>';
+  } else {
+    nextEl.innerHTML = `${info.toNext} XP → ${escapeHtml(info.nextTitle)} ${info.nextEmoji}`;
+  }
+  const today = document.getElementById('power-today');
+  const earned = xpToday.earned || 0;
+  today.textContent = earned > 0 ? `+${earned} today` : '+0 today';
+  today.classList.toggle('zero', earned === 0);
+}
+
+// ---------- Bonus Training renderer + setup ----------
+function renderBonus() {
+  // Multiplier chip
+  const mult = streakMultiplier();
+  const chip = document.getElementById('bonus-mult-chip');
+  chip.textContent = `×${mult}`;
+  chip.classList.toggle('x1', mult === 1);
+  const note = document.getElementById('bonus-mult-note');
+  if (mult > 1) {
+    note.textContent = `Active — extras earn ${mult}× XP right now`;
+    note.style.color = 'var(--cyan)';
+    note.style.fontWeight = '700';
+  } else {
+    note.textContent = '3-day streak → ×2 · 7-day → ×3 · 14-day → ×4 · 30-day → ×5';
+    note.style.color = 'var(--muted)';
+    note.style.fontWeight = '500';
+  }
+
+  // Preset grid
+  const grid = document.getElementById('bonus-preset-grid');
+  grid.innerHTML = '';
+  BONUS_PRESETS.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'bonus-preset';
+    btn.innerHTML = `
+      <span class="preset-emoji">${p.emoji}</span>
+      <span class="preset-name">${escapeHtml(p.name)}</span>
+      <span class="preset-pts">+${p.pts * mult}</span>
+    `;
+    btn.addEventListener('click', () => addBonus(p.name, p.pts, p.emoji));
+    grid.appendChild(btn);
+  });
+
+  // Today's bonuses
+  const today = document.getElementById('bonus-today');
+  today.innerHTML = '';
+  const list = xpToday.bonuses || [];
+  if (list.length === 0) {
+    today.innerHTML = '<div class="bonus-empty">No bonus training yet today — tap one above to earn extra XP</div>';
+    return;
+  }
+  const total = list.reduce((sum, b) => sum + b.pts, 0);
+  const head = document.createElement('div');
+  head.className = 'bonus-today-head';
+  head.innerHTML = `<span>Today's bonuses (${list.length})</span><span class="bonus-today-total">+${total} XP</span>`;
+  today.appendChild(head);
+  [...list].reverse().forEach(b => {
+    const row = document.createElement('div');
+    row.className = 'bonus-today-row';
+    row.innerHTML = `
+      <div style="font-size:18px;">${b.emoji || '✨'}</div>
+      <div>${escapeHtml(b.name)}</div>
+      <div class="pts">+${b.pts}</div>
+      <button class="delete-btn" data-id="${b.id}" title="Remove">🗑</button>
+    `;
+    row.querySelector('.delete-btn').addEventListener('click', () => removeBonus(b.id));
+    today.appendChild(row);
+  });
+}
+
+function setupBonus() {
+  const nameInput = document.getElementById('bonus-custom-name');
+  const ptsInput = document.getElementById('bonus-custom-pts');
+  const addBtn = document.getElementById('bonus-custom-add');
+  const submit = () => {
+    const name = nameInput.value.trim();
+    if (!name) { nameInput.focus(); return; }
+    let pts = parseInt(ptsInput.value, 10);
+    if (!pts || pts < 1) pts = 5;
+    if (pts > 20) pts = 20;
+    addBonus(name, pts, '✨');
+    nameInput.value = '';
+    ptsInput.value = '5';
+    nameInput.focus();
+  };
+  addBtn.addEventListener('click', submit);
+  nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+  ptsInput.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+}
+
+// ---------- Welcome flow ----------
+function showWelcome() {
+  const modal = document.getElementById('welcome-modal');
+  modal.classList.remove('hidden');
+
+  // Multi-select: clicking any role toggles it
+  modal.querySelectorAll('.role-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('active');
+    });
+  });
+
+  document.getElementById('start-btn').addEventListener('click', () => {
+    const name = document.getElementById('name-input').value.trim();
+    if (!name) {
+      document.getElementById('name-input').focus();
+      return;
+    }
+    const pickedRoles = [...modal.querySelectorAll('.role-btn.active')].map(b => b.dataset.role);
+    if (pickedRoles.length === 0) {
+      alert('Pick at least one role!');
+      return;
+    }
+    // Strip dots so they don't break the team-scoped storage keys
+    const team = (document.getElementById('team-input').value.trim().replace(/\./g, '')) || 'Livewire';
+    dancer = { name, roles: pickedRoles, team };
+    saveJSON(KEYS.dancer, dancer);
+    // If they entered a birthday, stash it on the team-scoped birthdays map (MM-DD only)
+    const bday = document.getElementById('birthday-input').value;
+    if (bday) {
+      const parts = bday.split('-'); // YYYY-MM-DD
+      if (parts.length === 3) {
+        const bdays = loadJSON(`livewire.${team}.birthdays`, {});
+        bdays[name] = `${parts[1]}-${parts[2]}`;
+        saveJSON(`livewire.${team}.birthdays`, bdays);
+      }
+    }
+    modal.classList.add('hidden');
+    init();
+  });
+
+  document.getElementById('name-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('start-btn').click();
+  });
+  document.getElementById('name-input').focus();
+}
+
+// ---------- Load per-dancer data ----------
+function loadDancerData() {
+  // Load the team's shared settings first (now team-scoped)
+  shared = loadJSON(KEYS.shared(), { ...DEFAULTS });
+  const stored = loadJSON(KEYS.checksFor(dancer.name), { date: today(), items: {} });
+  // If stored checks are from a previous day, reset them (daily refresh)
+  if (stored.date !== today()) {
+    // Before resetting, check if yesterday was completed → update history
+    const wasDoneCount = Object.values(stored.items).filter(Boolean).length;
+    if (wasDoneCount === allItems.length) {
+      const hist = loadJSON(KEYS.historyFor(dancer.name), []);
+      if (!hist.includes(stored.date)) hist.push(stored.date);
+      saveJSON(KEYS.historyFor(dancer.name), hist);
+    }
+    checks = {};
+    saveJSON(KEYS.checksFor(dancer.name), { date: today(), items: {} });
+  } else {
+    checks = stored.items || {};
+  }
+  history = loadJSON(KEYS.historyFor(dancer.name), []);
+  schedule = loadJSON(KEYS.scheduleFor(dancer.name), {});
+  customItems = loadJSON(KEYS.customFor(dancer.name), []);
+  assistEvents = loadJSON(KEYS.assistFor(dancer.name), []);
+  weekChecks = loadJSON(KEYS.weekChecksFor(dancer.name), {});
+  // Each user has their own weekly schedule (defaults to the photo).
+  // Migration: if shared.weekly exists from an older version, use it as this user's starting point.
+  const fallback = (shared.weekly && Object.keys(shared.weekly).length) ? shared.weekly : DEFAULT_WEEKLY;
+  weekly = loadJSON(KEYS.weeklyFor(dancer.name), { ...fallback });
+  comps = loadJSON(KEYS.compsFor(dancer.name), []);
+  // Team-shared personality stuff
+  motto = loadJSON(KEYS.motto(), '');
+  quotes = loadJSON(KEYS.quotes(), []);
+  birthdays = loadJSON(KEYS.birthdays(), {});
+  // Per-user badges
+  badges = loadJSON(KEYS.badgesFor(dancer.name), []);
+  // Per-user XP (lifetime) + today's XP (resets at midnight)
+  xp = loadJSON(KEYS.xpFor(dancer.name), 0);
+  xpToday = loadJSON(KEYS.xpTodayFor(dancer.name), { date: today(), earned: 0, bonuses: [], dailyBonusGiven: false });
+  if (xpToday.date !== today()) {
+    xpToday = { date: today(), earned: 0, bonuses: [], dailyBonusGiven: false };
+    saveJSON(KEYS.xpTodayFor(dancer.name), xpToday);
+  }
+}
+
+function saveMotto()     { saveJSON(KEYS.motto(), motto); }
+function saveQuotes()    { saveJSON(KEYS.quotes(), quotes); }
+function saveBirthdays() { saveJSON(KEYS.birthdays(), birthdays); }
+function saveBadges()    { saveJSON(KEYS.badgesFor(dancer.name), badges); }
+function saveXP()        { saveJSON(KEYS.xpFor(dancer.name), xp); }
+function saveXPToday()   { saveJSON(KEYS.xpTodayFor(dancer.name), xpToday); }
+
+function saveComps() {
+  saveJSON(KEYS.compsFor(dancer.name), comps);
+}
+
+function saveWeekChecks() {
+  saveJSON(KEYS.weekChecksFor(dancer.name), weekChecks);
+}
+function saveWeekly() {
+  saveJSON(KEYS.weeklyFor(dancer.name), weekly);
+}
+
+function saveCustom() {
+  saveJSON(KEYS.customFor(dancer.name), customItems);
+}
+function saveAssist() {
+  saveJSON(KEYS.assistFor(dancer.name), assistEvents);
+}
+
+// Toast notification
+function toast(msg, ms = 2400) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => t.classList.remove('show'), ms);
+}
+
+function saveSchedule() {
+  saveJSON(KEYS.scheduleFor(dancer.name), schedule);
+}
+
+// Format "HH:MM" → "4:30 PM"
+function fmtTime(hhmm) {
+  if (!hhmm) return null;
+  const [h, m] = hhmm.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+
+// Is the section fully checked off?
+function isSectionDone(section) {
+  return section.items.every(item => checks[item.id]);
+}
+
+function saveChecks() {
+  saveJSON(KEYS.checksFor(dancer.name), { date: today(), items: checks });
+  // If everything is done today, add today to history (if not already)
+  const doneCount = Object.values(checks).filter(Boolean).length;
+  if (doneCount === allItems.length && !history.includes(today())) {
+    history.push(today());
+    saveJSON(KEYS.historyFor(dancer.name), history);
+  }
+  // If we un-checked something and today was in history, remove it
+  if (doneCount < allItems.length && history.includes(today())) {
+    history = history.filter(d => d !== today());
+    saveJSON(KEYS.historyFor(dancer.name), history);
+  }
+}
+
+// ---------- Streak computation ----------
+function computeStreak() {
+  if (history.length === 0) return 0;
+  const set = new Set(history);
+  let streak = 0;
+  let cursor = today();
+  // If today not done yet, start from yesterday so a half-done day doesn't reset streak
+  if (!set.has(cursor)) {
+    const d = new Date(cursor + 'T00:00:00');
+    d.setDate(d.getDate() - 1);
+    cursor = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  while (set.has(cursor)) {
+    streak++;
+    const d = new Date(cursor + 'T00:00:00');
+    d.setDate(d.getDate() - 1);
+    cursor = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  return streak;
+}
+
+// ---------- Rendering ----------
+function renderHeader() {
+  // Update logo + banner to show team name
+  const teamName = (dancer.team || 'Livewire').toUpperCase();
+  document.querySelector('.logo').textContent = `⚡ ${teamName} DAILY`;
+  document.getElementById('team-banner-text').textContent = teamName;
+
+  document.getElementById('user-name-display').textContent = dancer.name;
+  const tag = document.getElementById('user-role-tag');
+  const roleMap = {
+    teacher:   { label: 'TEACHER',   color: 'var(--cyan)' },
+    assistant: { label: 'ASSISTANT', color: 'var(--yellow)' },
+    dancer:    { label: 'DANCER',    color: 'var(--pink)' },
+    admin:     { label: 'TEACHER',   color: 'var(--cyan)' }
+  };
+  const roles = userRoles();
+  tag.textContent = roles.map(r => (roleMap[r] || roleMap.dancer).label).join(' · ');
+  tag.style.background = (roleMap[roles[0]] || roleMap.dancer).color;
+  tag.style.color = 'var(--on-accent)';
+
+  const days = daysBetween(today(), shared.nationalsDate);
+  document.getElementById('days-num').textContent = days >= 0 ? days : 0;
+  const dateObj = new Date(shared.nationalsDate + 'T00:00:00');
+  document.getElementById('nationals-date').textContent =
+    dateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+  document.getElementById('practices-num').textContent = shared.practicesRemaining;
+  document.getElementById('streak-num').textContent = computeStreak();
+
+  // Teachers (or legacy admins) can set Nationals date / practice count
+  document.getElementById('admin-btn').style.display = hasRole('teacher') ? '' : 'none';
+
+  // Coach Schedule visible to teachers AND assistants
+  document.getElementById('assist-card').style.display =
+    (hasRole('teacher') || hasRole('assistant')) ? '' : 'none';
+
+  // Dancer-only content: hide for users who aren't dancers (i.e., pure teachers/assistants)
+  const isDancer = hasRole('dancer');
+  const dancerOnly = [
+    document.querySelector('.stats'),
+    document.getElementById('power-card'),
+    document.querySelector('.progress-block'),
+    document.getElementById('sections'),
+    document.getElementById('bonus-card'),
+    document.querySelector('.expectations'),
+    document.querySelector('.reminder')
+  ];
+  dancerOnly.forEach(el => { if (el) el.style.display = isDancer ? '' : 'none'; });
+
+  // Re-label Custom Plan for teachers (it's their productive daily task list)
+  const customTitle = document.querySelector('.custom-card .section-title');
+  const customMeta = document.getElementById('custom-meta');
+  const customNameInput = document.getElementById('custom-name');
+  if (hasRole('teacher') && !isDancer) {
+    if (customTitle) customTitle.textContent = 'Daily Tasks';
+    if (customMeta && customItems.length === 0) customMeta.textContent = 'Add productive things you need to do today';
+    if (customNameInput) customNameInput.placeholder = 'e.g. Plan Tuesday class, Email parents...';
+  } else {
+    if (customTitle) customTitle.textContent = 'My Custom Plan';
+    if (customNameInput) customNameInput.placeholder = 'e.g. Cardio run, Stretch session...';
+  }
+}
+
+// Normalize roles array regardless of old/new save format
+function userRoles() {
+  if (!dancer) return ['dancer'];
+  if (Array.isArray(dancer.roles)) return dancer.roles;
+  if (dancer.role) return [dancer.role];
+  return ['dancer'];
+}
+function hasRole(r) {
+  const roles = userRoles();
+  // 'admin' counts as 'teacher' for permission checks
+  if (r === 'teacher' && roles.includes('admin')) return true;
+  return roles.includes(r);
+}
+
+function renderSections() {
+  const container = document.getElementById('sections');
+  container.innerHTML = '';
+
+  CHECKLIST.forEach(section => {
+    const card = document.createElement('div');
+    card.className = 'section-card';
+    const scheduled = schedule[section.id];
+    const chipText = scheduled ? fmtTime(scheduled) : '+ set time';
+    card.innerHTML = `
+      <div class="section-head">
+        <div class="section-num">${section.num}</div>
+        <div>
+          <div class="section-title">${section.title}</div>
+          <div class="section-meta">${section.meta}</div>
+        </div>
+        <button class="section-time-chip ${scheduled ? '' : 'unset'}" data-section="${section.id}">${chipText}</button>
+      </div>
+      <div class="section-purpose">${section.purpose}</div>
+    `;
+
+    // Wire up the time chip: clicking turns it into a time input
+    const chip = card.querySelector('.section-time-chip');
+    chip.addEventListener('click', () => editSectionTime(chip, section.id));
+
+    section.items.forEach(item => {
+      const itemEl = document.createElement('div');
+      itemEl.className = 'item' + (checks[item.id] ? ' done' : '');
+      itemEl.innerHTML = `
+        <div class="item-row">
+          <div class="checkbox">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <div class="item-name">${item.name}</div>
+          <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+        <div class="item-detail">
+          <div class="item-detail-inner">
+            ${item.how ? `<div class="detail-label">How to do it</div><ul class="detail-list">${item.how.map(h => `<li>${h}</li>`).join('')}</ul>` : ''}
+            ${item.good && item.good.length ? `<div class="detail-label">Cues</div><ul class="detail-list good">${item.good.map(g => `<li>${g}</li>`).join('')}</ul>` : ''}
+            ${item.bad && item.bad.length ? `<div class="detail-label">Avoid</div><ul class="detail-list bad">${item.bad.map(b => `<li>${b}</li>`).join('')}</ul>` : ''}
+          </div>
+        </div>
+      `;
+
+      // Click checkbox = toggle done
+      itemEl.querySelector('.checkbox').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleItem(item.id, itemEl);
+      });
+
+      // Click anywhere else on row = expand/collapse
+      itemEl.querySelector('.item-row').addEventListener('click', (e) => {
+        if (e.target.closest('.checkbox')) return;
+        itemEl.classList.toggle('open');
+      });
+
+      card.appendChild(itemEl);
+    });
+
+    container.appendChild(card);
+  });
+
+  renderProgress();
+  renderTodayPlan();
+}
+
+// ---------- Competitions ----------
+function formatCompDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
+
+function renderComps() {
+  const list = document.getElementById('comp-list');
+  const meta = document.getElementById('comp-meta');
+  list.innerHTML = '';
+
+  const todayStr = today();
+  // Upcoming sorted soonest-first; past sorted most-recent-first
+  const upcoming = comps.filter(c => c.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date));
+  const past = comps.filter(c => c.date < todayStr).sort((a, b) => b.date.localeCompare(a.date));
+  const ordered = [...upcoming, ...past];
+
+  if (ordered.length === 0) {
+    list.innerHTML = '<div class="custom-empty">No competitions yet. Add one below ↓</div>';
+    meta.textContent = 'Track upcoming comps and past memories';
+    return;
+  }
+
+  const upText = upcoming.length ? `${upcoming.length} upcoming` : '';
+  const pastText = past.length ? `${past.length} past` : '';
+  meta.textContent = [upText, pastText].filter(Boolean).join(' · ');
+
+  ordered.forEach(comp => {
+    const isPast = comp.date < todayStr;
+    const days = Math.abs(daysBetween(todayStr, comp.date));
+    const statusEmoji = isPast ? '🏆' : (days === 0 ? '🎉' : '🔜');
+    const countdownLabel = isPast ? 'days ago' : (days === 0 ? 'today!' : 'days');
+    const countdownNum = days === 0 && !isPast ? '🎉' : days;
+
+    const placementHtml = comp.placement
+      ? `<span class="comp-placement">${escapeHtml(comp.placement)}</span>` : '';
+    const scoreText = comp.score ? ` · Score: ${escapeHtml(comp.score)}` : '';
+
+    const item = document.createElement('div');
+    item.className = 'comp-item';
+    item.dataset.id = comp.id;
+    item.innerHTML = `
+      <div class="comp-header">
+        <div class="comp-status">${statusEmoji}</div>
+        <div class="comp-info">
+          <div class="comp-name">${placementHtml}${escapeHtml(comp.name)}</div>
+          <div class="comp-meta">${formatCompDate(comp.date)}${comp.location ? ' · ' + escapeHtml(comp.location) : ''}${scoreText}</div>
+        </div>
+        <div class="comp-countdown">
+          <div class="num">${countdownNum}</div>
+          <div class="label">${countdownLabel}</div>
+        </div>
+      </div>
+      ${comp.notes ? `<div class="comp-notes-preview">"${escapeHtml(comp.notes)}"</div>` : ''}
+    `;
+
+    item.querySelector('.comp-header').addEventListener('click', () => {
+      if (item.classList.contains('expanded')) {
+        item.classList.remove('expanded');
+        renderComps();
+      } else {
+        expandComp(comp.id);
+      }
+    });
+
+    list.appendChild(item);
+  });
+}
+
+function expandComp(id) {
+  const comp = comps.find(c => c.id === id);
+  if (!comp) return;
+  const item = document.querySelector(`.comp-item[data-id="${id}"]`);
+  if (!item) return;
+  item.classList.add('expanded');
+
+  const form = document.createElement('div');
+  form.className = 'comp-edit-form';
+  form.innerHTML = `
+    <input type="text" class="edit-name" value="${escapeHtml(comp.name)}" placeholder="Competition name">
+    <div class="row2">
+      <input type="date" class="edit-date" value="${comp.date}">
+      <input type="text" class="edit-location" value="${escapeHtml(comp.location || '')}" placeholder="Location (optional)">
+    </div>
+    <div class="row2">
+      <input type="text" class="edit-placement" value="${escapeHtml(comp.placement || '')}" placeholder="Placement (e.g. 1st, Top 10)">
+      <input type="text" class="edit-score" value="${escapeHtml(comp.score || '')}" placeholder="Score (optional)">
+    </div>
+    <textarea class="edit-notes" placeholder="Memory or notes... what went well, what to remember">${escapeHtml(comp.notes || '')}</textarea>
+    <div class="form-actions">
+      <button class="btn-save">Save</button>
+      <button class="btn-delete">Delete</button>
+    </div>
+  `;
+  item.appendChild(form);
+
+  form.querySelector('.btn-save').addEventListener('click', () => {
+    const newName = form.querySelector('.edit-name').value.trim() || 'Untitled';
+    const newDate = form.querySelector('.edit-date').value || comp.date;
+    comp.name = newName;
+    comp.date = newDate;
+    comp.location = form.querySelector('.edit-location').value.trim() || null;
+    comp.placement = form.querySelector('.edit-placement').value.trim() || null;
+    comp.score = form.querySelector('.edit-score').value.trim() || null;
+    comp.notes = form.querySelector('.edit-notes').value.trim() || null;
+    saveComps();
+    renderComps();
+    checkBadges();
+    toast('Saved');
+  });
+
+  form.querySelector('.btn-delete').addEventListener('click', () => {
+    if (confirm(`Delete "${comp.name}"?`)) {
+      comps = comps.filter(c => c.id !== id);
+      saveComps();
+      renderComps();
+      toast('Deleted');
+    }
+  });
+}
+
+function setupComps() {
+  document.getElementById('comp-add-btn').addEventListener('click', () => {
+    const newComp = {
+      id: 'comp-' + Date.now(),
+      name: 'New Competition',
+      date: today(),
+      location: null,
+      placement: null,
+      score: null,
+      notes: null
+    };
+    comps.push(newComp);
+    saveComps();
+    renderComps();
+    checkBadges();
+    // Auto-expand the new one so they can edit immediately
+    setTimeout(() => expandComp(newComp.id), 50);
+  });
+}
+
+// ---------- Weekly schedule ----------
+const DAY_FULL = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' };
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// Get the Monday of the current week (or offset weeks away)
+function getWeekStart(offsetWeeks = 0) {
+  const d = new Date();
+  const day = d.getDay(); // 0 = Sun
+  const diff = (day === 0 ? -6 : 1 - day) + (offsetWeeks * 7);
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function dateStr(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
+function renderWeek() {
+  const list = document.getElementById('week-list');
+  const range = document.getElementById('week-range');
+  const hint = document.getElementById('week-edit-hint');
+  list.innerHTML = '';
+
+  const monday = getWeekStart(weekViewOffset);
+  const sunday = new Date(monday);
+  sunday.setDate(sunday.getDate() + 6);
+  range.textContent = `${MONTHS[monday.getMonth()]} ${monday.getDate()} – ${MONTHS[sunday.getMonth()]} ${sunday.getDate()}`;
+
+  const todayStr = today();
+  // Teachers can edit anything; assistants can edit anything except Blackout Class days
+  const isTeacher = hasRole('teacher');
+  const isAssistant = hasRole('assistant');
+  if (isTeacher) {
+    hint.textContent = 'Tap any activity to edit your personal schedule.';
+  } else if (isAssistant) {
+    hint.textContent = 'Tap any activity to edit — Blackout Class days are locked by your teacher.';
+  } else {
+    hint.textContent = 'Tap a checkbox to mark a day complete';
+  }
+
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  days.forEach((dayKey, i) => {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + i);
+    const ds = dateStr(d);
+    const isToday = ds === todayStr;
+    const isDone = !!weekChecks[ds];
+    const activity = weekly[dayKey] || '';
+
+    // Per-day edit permission: assistants can't touch Blackout Class days
+    const isBlackout = /blackout/i.test(activity);
+    const canEditThisDay = isTeacher || (isAssistant && !isBlackout);
+    const lockIcon = (isAssistant && isBlackout) ? ' 🔒' : '';
+
+    const row = document.createElement('div');
+    row.className = 'week-row' + (isToday ? ' today' : '') + (isDone ? ' done' : '');
+    row.innerHTML = `
+      <div class="week-day">
+        <div class="day-name">${dayKey}</div>
+        <div class="day-date">${d.getMonth() + 1}/${d.getDate()}</div>
+      </div>
+      <div class="week-activity ${canEditThisDay ? 'editable' : ''}" data-day="${dayKey}">${escapeHtml(activity)}${lockIcon}</div>
+      <div class="checkbox" data-date="${ds}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+    `;
+
+    // Checkbox toggle (everyone can check off)
+    row.querySelector('.checkbox').addEventListener('click', () => {
+      if (weekChecks[ds]) {
+        delete weekChecks[ds];
+      } else {
+        weekChecks[ds] = true;
+      }
+      saveWeekChecks();
+      renderWeek();
+      checkBadges();
+    });
+
+    // Edit activity in place (teachers always, assistants if not Blackout)
+    if (canEditThisDay) {
+      row.querySelector('.week-activity').addEventListener('click', (e) => {
+        editWeekActivity(e.currentTarget, dayKey);
+      });
+    }
+
+    list.appendChild(row);
+  });
+}
+
+function editWeekActivity(el, dayKey) {
+  const current = weekly[dayKey] || '';
+  el.innerHTML = `<input class="week-activity-input" type="text" value="${escapeHtml(current)}">`;
+  const input = el.querySelector('input');
+  input.focus();
+  input.select();
+
+  const finish = () => {
+    const v = input.value.trim();
+    weekly[dayKey] = v || DEFAULT_WEEKLY[dayKey];
+    saveWeekly();
+    renderWeek();
+  };
+  input.addEventListener('blur', finish, { once: true });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') input.blur();
+    if (e.key === 'Escape') { input.value = current; input.blur(); }
+  });
+}
+
+function setupWeekNav() {
+  document.getElementById('week-prev').addEventListener('click', () => {
+    weekViewOffset--;
+    renderWeek();
+  });
+  document.getElementById('week-next').addEventListener('click', () => {
+    weekViewOffset++;
+    renderWeek();
+  });
+}
+
+// ---------- Today's plan timeline ----------
+function renderTodayPlan() {
+  const list = document.getElementById('plan-list');
+  const nextEl = document.getElementById('plan-next');
+  list.innerHTML = '';
+  nextEl.textContent = '';
+
+  // Combine team-checklist sections AND user's custom items into one timeline
+  const sectionRows = CHECKLIST.map(s => ({
+    kind: 'section',
+    id: s.id,
+    name: s.title,
+    meta: s.meta,
+    time: schedule[s.id] || null,
+    done: isSectionDone(s)
+  }));
+  const customRows = customItems.map(c => ({
+    kind: 'custom',
+    id: c.id,
+    name: c.name,
+    meta: 'Custom',
+    time: c.time || null,
+    done: !!checks[c.id]
+  }));
+
+  const rows = [...sectionRows, ...customRows].sort((a, b) => {
+    if (a.time && b.time) return a.time.localeCompare(b.time);
+    if (a.time) return -1;
+    if (b.time) return 1;
+    return 0;
+  });
+
+  // Figure out "up next" — first scheduled item that isn't done yet and hasn't passed
+  const now = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const upNext = rows.find(r => {
+    if (!r.time || r.done) return false;
+    const [h, m] = r.time.split(':').map(Number);
+    return h * 60 + m >= nowMins;
+  });
+
+  if (rows.every(r => !r.time)) {
+    list.innerHTML = '<div class="plan-empty">Set times on any section below — or add custom items — to build your plan</div>';
+    return;
+  }
+
+  if (upNext) {
+    nextEl.textContent = `Up next: ${upNext.name} at ${fmtTime(upNext.time)}`;
+  } else if (rows.some(r => r.time)) {
+    const scheduledRows = rows.filter(r => r.time);
+    const allDone = scheduledRows.every(r => r.done);
+    nextEl.textContent = allDone ? 'All planned training complete ✦' : '';
+  }
+
+  rows.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'plan-row' + (r.done ? ' done' : '') + (upNext === r ? ' upnow' : '');
+    row.innerHTML = `
+      <div class="plan-time ${r.time ? '' : 'unset'}">${r.time ? fmtTime(r.time) : '— : —'}</div>
+      <div>
+        <div class="plan-name">${r.name}</div>
+        <div class="plan-duration">${r.meta}</div>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+// ---------- Custom plan renderer ----------
+function renderCustomPlan() {
+  const list = document.getElementById('custom-items');
+  const meta = document.getElementById('custom-meta');
+  list.innerHTML = '';
+
+  if (customItems.length === 0) {
+    list.innerHTML = '<div class="custom-empty">No custom items yet. Add one below ↓</div>';
+    meta.textContent = 'Add your own training items with times';
+  } else {
+    meta.textContent = `${customItems.length} custom item${customItems.length === 1 ? '' : 's'}`;
+    customItems.forEach(item => {
+      const isDone = !!checks[item.id];
+      const row = document.createElement('div');
+      row.className = 'custom-item-row' + (isDone ? ' done' : '');
+      row.innerHTML = `
+        <div class="checkbox" data-id="${item.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <div class="item-name" style="flex:1;">${escapeHtml(item.name)}</div>
+        <span class="custom-time-tag ${item.time ? '' : 'unset'}">${item.time ? fmtTime(item.time) : 'no time'}</span>
+        <button class="delete-btn" data-del="${item.id}" title="Delete">✕</button>
+      `;
+      list.appendChild(row);
+
+      // Wire up checkbox
+      row.querySelector('.checkbox').addEventListener('click', () => {
+        checks[item.id] = !checks[item.id];
+        if (checks[item.id]) {
+          row.classList.add('done');
+        } else {
+          row.classList.remove('done');
+        }
+        saveChecks();
+        renderTodayPlan();
+      });
+
+      // Wire up delete
+      row.querySelector('.delete-btn').addEventListener('click', () => {
+        if (confirm(`Delete "${item.name}"?`)) {
+          customItems = customItems.filter(c => c.id !== item.id);
+          delete checks[item.id];
+          saveCustom();
+          saveChecks();
+          renderCustomPlan();
+          renderTodayPlan();
+        }
+      });
+    });
+  }
+}
+
+// ---------- Assistant / Coach Schedule ----------
+const DAY_ORDER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+function renderAssistSchedule() {
+  const list = document.getElementById('assist-list');
+  const meta = document.getElementById('assist-meta');
+  list.innerHTML = '';
+
+  if (assistEvents.length === 0) {
+    list.innerHTML = '<div class="custom-empty">No coach events yet. Add one below ↓</div>';
+    meta.textContent = 'Plan team events — sync to your My Week planner';
+    return;
+  }
+
+  meta.textContent = `${assistEvents.length} event${assistEvents.length === 1 ? '' : 's'} scheduled`;
+
+  // Sort by day, then time
+  const sorted = [...assistEvents].sort((a, b) => {
+    const dayDiff = DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day);
+    if (dayDiff !== 0) return dayDiff;
+    return (a.time || '').localeCompare(b.time || '');
+  });
+
+  sorted.forEach(ev => {
+    const row = document.createElement('div');
+    row.className = 'assist-row';
+    row.innerHTML = `
+      <div class="assist-day">${ev.day}</div>
+      <div>
+        ${escapeHtml(ev.name)}
+        ${ev.students ? `<div style="font-size:11px; color:var(--muted); margin-top:3px; line-height:1.3;">👥 with ${escapeHtml(ev.students)}</div>` : ''}
+      </div>
+      <div class="assist-time">${ev.time ? fmtTime(ev.time) : '—'}</div>
+      <button class="delete-btn" data-del="${ev.id}" title="Delete">✕</button>
+    `;
+    row.querySelector('.delete-btn').addEventListener('click', () => {
+      if (confirm(`Delete "${ev.name}" on ${ev.day}?`)) {
+        assistEvents = assistEvents.filter(e => e.id !== ev.id);
+        saveAssist();
+        renderAssistSchedule();
+      }
+    });
+    list.appendChild(row);
+  });
+}
+
+function setupAssistSchedule() {
+  const dayInput = document.getElementById('assist-day');
+  const nameInput = document.getElementById('assist-name');
+  const studentsInput = document.getElementById('assist-students');
+  const timeInput = document.getElementById('assist-time');
+  const addBtn = document.getElementById('assist-add');
+  const syncBtn = document.getElementById('assist-sync');
+
+  const submit = () => {
+    const name = nameInput.value.trim();
+    if (!name) { nameInput.focus(); return; }
+    const students = studentsInput.value.trim();
+    assistEvents.push({
+      id: 'ev-' + Date.now(),
+      day: dayInput.value,
+      name,
+      time: timeInput.value || null,
+      students: students || null
+    });
+    saveAssist();
+    nameInput.value = '';
+    studentsInput.value = '';
+    timeInput.value = '';
+    renderAssistSchedule();
+    nameInput.focus();
+  };
+
+  addBtn.addEventListener('click', submit);
+  nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+  studentsInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+
+  // Preset: add "Daily Training" for every day of the week
+  document.getElementById('preset-daily').addEventListener('click', () => {
+    const existing = new Set(assistEvents.map(e => `${e.day}|${e.name}`));
+    let added = 0;
+    DAY_ORDER.forEach(day => {
+      const key = `${day}|Daily Training`;
+      if (!existing.has(key)) {
+        assistEvents.push({
+          id: 'ev-' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
+          day,
+          name: 'Daily Training',
+          time: '16:00'
+        });
+        added++;
+      }
+    });
+    saveAssist();
+    renderAssistSchedule();
+    toast(added ? `Added ${added} daily training events at 4:00 PM` : 'Already added — edit times as needed');
+  });
+
+  // Preset: add 2 Team Practices (Tue + Thu)
+  document.getElementById('preset-practice').addEventListener('click', () => {
+    const existing = new Set(assistEvents.map(e => `${e.day}|${e.name}`));
+    let added = 0;
+    ['Tue', 'Thu'].forEach(day => {
+      const key = `${day}|Team Practice`;
+      if (!existing.has(key)) {
+        assistEvents.push({
+          id: 'ev-' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
+          day,
+          name: 'Team Practice',
+          time: '18:00'
+        });
+        added++;
+      }
+    });
+    saveAssist();
+    renderAssistSchedule();
+    toast(added ? `Added ${added} team practices at 6:00 PM` : 'Already added — edit days/times as needed');
+  });
+
+  // "Send to My Week" — copies a formatted schedule, then opens My Week in a new tab
+  syncBtn.addEventListener('click', async () => {
+    if (assistEvents.length === 0) {
+      toast('Add some events first!');
+      return;
+    }
+    // Build a clean, paste-friendly schedule
+    const sorted = [...assistEvents].sort((a, b) => {
+      const dayDiff = DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day);
+      if (dayDiff !== 0) return dayDiff;
+      return (a.time || '').localeCompare(b.time || '');
+    });
+    const lines = ['LIVEWIRE COACH SCHEDULE', '─────────────────────────'];
+    let lastDay = '';
+    sorted.forEach(ev => {
+      if (ev.day !== lastDay) {
+        lines.push('');
+        lines.push(ev.day.toUpperCase());
+        lastDay = ev.day;
+      }
+      const time = ev.time ? fmtTime(ev.time) : '(no time)';
+      const withWho = ev.students ? ` (with ${ev.students})` : '';
+      lines.push(`  • ${time} — ${ev.name}${withWho}`);
+    });
+    const text = lines.join('\n');
+
+    try {
+      await navigator.clipboard.writeText(text);
+      toast('Schedule copied! Opening My Week…');
+      setTimeout(() => {
+        window.open('https://tdmffss033vb-production-0ubs7ten.us-central1.suga.run/', '_blank');
+      }, 600);
+    } catch (e) {
+      // Fallback: show a prompt with the text
+      window.prompt('Copy this schedule into My Week:', text);
+      window.open('https://tdmffss033vb-production-0ubs7ten.us-central1.suga.run/', '_blank');
+    }
+  });
+}
+
+// Escape HTML to prevent injection from user-typed exercise names
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// Add-form handlers
+function setupCustomPlan() {
+  const nameInput = document.getElementById('custom-name');
+  const timeInput = document.getElementById('custom-time');
+  const addBtn = document.getElementById('custom-add');
+
+  const submit = () => {
+    const name = nameInput.value.trim();
+    if (!name) { nameInput.focus(); return; }
+    const time = timeInput.value || null;
+    customItems.push({
+      id: 'custom-' + Date.now(),
+      name,
+      time
+    });
+    saveCustom();
+    nameInput.value = '';
+    timeInput.value = '';
+    renderCustomPlan();
+    renderTodayPlan();
+    checkBadges();
+    nameInput.focus();
+  };
+
+  addBtn.addEventListener('click', submit);
+  nameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submit();
+  });
+}
+
+// ---------- Edit a section time ----------
+function editSectionTime(chipEl, sectionId) {
+  const current = schedule[sectionId] || '';
+  chipEl.innerHTML = `<input type="time" value="${current}">`;
+  const input = chipEl.querySelector('input');
+  input.focus();
+  if (input.showPicker) try { input.showPicker(); } catch {}
+
+  const finish = () => {
+    const val = input.value;
+    if (val) {
+      schedule[sectionId] = val;
+    } else {
+      delete schedule[sectionId];
+    }
+    saveSchedule();
+    renderSections();
+    checkBadges();
+  };
+  input.addEventListener('blur', finish, { once: true });
+  input.addEventListener('change', () => input.blur());
+}
+
+function toggleItem(id, el) {
+  const wasDoneBefore = Object.values(checks).filter(Boolean).length === allItems.length;
+  const wasChecked = !!checks[id];
+  checks[id] = !checks[id];
+  if (checks[id]) {
+    el.classList.add('done', 'just-checked');
+    setTimeout(() => el.classList.remove('just-checked'), 400);
+    // Sparkle burst from the checkbox
+    const box = el.querySelector('.checkbox');
+    if (box) {
+      const r = box.getBoundingClientRect();
+      sparkleBurst(r.left + r.width / 2, r.top + r.height / 2, 6);
+    }
+    addXP(1, { silent: true, skipBadges: true });
+  } else {
+    el.classList.remove('done');
+    if (wasChecked) addXP(-1, { silent: true, skipBadges: true });
+  }
+  saveChecks();
+  renderProgress();
+  renderTodayPlan();
+  // Re-render header in case streak changed
+  document.getElementById('streak-num').textContent = computeStreak();
+  renderBonus(); // Streak multiplier may have changed — refresh chips
+  // Did we just complete the whole day? Award bonus XP (once per day) + confetti
+  const allDoneNow = Object.values(checks).filter(Boolean).length === allItems.length;
+  if (allDoneNow && !wasDoneBefore && !xpToday.dailyBonusGiven) {
+    const mult = streakMultiplier();
+    const bonus = 20 * mult;
+    xpToday.dailyBonusGiven = true;
+    saveXPToday();
+    addXP(bonus, { silent: true, skipBadges: true });
+    confetti({ count: 140 });
+    if (simpleMode) {
+      toast('🌟 Daily training complete! Streak +1', 3200);
+    } else {
+      toast(`🌟 Full day! +${bonus} XP${mult > 1 ? ` (×${mult} streak!)` : ''}`, 3200);
+    }
+  }
+  checkBadges();
+}
+
+function renderProgress() {
+  const done = Object.values(checks).filter(Boolean).length;
+  const total = allItems.length;
+  document.getElementById('done-count').textContent = done;
+  document.getElementById('total-count').textContent = total;
+  document.getElementById('progress-fill').style.width = (done / total * 100) + '%';
+}
+
+// ---------- Theme picker ----------
+function renderThemeGrid() {
+  const grid = document.getElementById('theme-grid');
+  const currentTheme = localStorage.getItem(KEYS.theme) || DEFAULT_THEME;
+  grid.innerHTML = '';
+  Object.entries(THEMES).forEach(([id, theme]) => {
+    const card = document.createElement('div');
+    card.className = 'theme-card' + (id === currentTheme ? ' active' : '');
+    card.innerHTML = `
+      <div class="theme-swatches">
+        <div style="background:${theme.vars['--bg']}"></div>
+        <div style="background:${theme.vars['--pink']}"></div>
+        <div style="background:${theme.vars['--cyan']}"></div>
+        <div style="background:${theme.vars['--yellow']}"></div>
+      </div>
+      <div class="theme-emoji">${theme.emoji}</div>
+      <div class="theme-name">${theme.name}</div>
+    `;
+    card.addEventListener('click', () => {
+      applyTheme(id);
+      localStorage.setItem(KEYS.theme, id);
+      grid.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+    });
+    grid.appendChild(card);
+  });
+
+  // Add the "Make Custom" tile — last entry in the grid
+  const customColors = loadJSON(KEYS.customTheme(), null);
+  const customCard = document.createElement('div');
+  customCard.className = 'theme-card custom-tile' + (currentTheme === 'custom' ? ' active' : '') + (customColors ? ' has-custom' : '');
+  if (customColors) {
+    customCard.innerHTML = `
+      <div class="theme-swatches">
+        <div style="background:${customColors.bg}"></div>
+        <div style="background:${customColors.pink}"></div>
+        <div style="background:${customColors.cyan}"></div>
+        <div style="background:${customColors.yellow}"></div>
+      </div>
+      <div class="theme-emoji">🎨</div>
+      <div class="theme-name">My Custom</div>
+    `;
+  } else {
+    customCard.innerHTML = `
+      <div class="theme-swatches"></div>
+      <div class="theme-emoji">➕</div>
+      <div class="theme-name">Make Custom</div>
+    `;
+  }
+  customCard.addEventListener('click', () => {
+    openCustomThemeModal();
+  });
+  grid.appendChild(customCard);
+}
+
+function openCustomThemeModal() {
+  const modal = document.getElementById('custom-theme-modal');
+  const saved = loadJSON(KEYS.customTheme(), null);
+  const defaults = saved || { bg: '#0a0a1f', text: '#f5f5fa', pink: '#ff2d92', cyan: '#00e5ff', yellow: '#ffe14a' };
+  document.getElementById('ct-bg').value = defaults.bg;
+  document.getElementById('ct-text').value = defaults.text;
+  document.getElementById('ct-pink').value = defaults.pink;
+  document.getElementById('ct-cyan').value = defaults.cyan;
+  document.getElementById('ct-yellow').value = defaults.yellow;
+  modal.classList.remove('hidden');
+  // Close the theme picker behind it
+  document.getElementById('theme-modal').classList.add('hidden');
+}
+
+function setupCustomTheme() {
+  const modal = document.getElementById('custom-theme-modal');
+  document.getElementById('ct-cancel').addEventListener('click', () => modal.classList.add('hidden'));
+  document.getElementById('ct-save').addEventListener('click', () => {
+    const colors = {
+      bg: document.getElementById('ct-bg').value,
+      text: document.getElementById('ct-text').value,
+      pink: document.getElementById('ct-pink').value,
+      cyan: document.getElementById('ct-cyan').value,
+      yellow: document.getElementById('ct-yellow').value
+    };
+    saveJSON(KEYS.customTheme(), colors);
+    localStorage.setItem(KEYS.theme, 'custom');
+    applyCustomTheme(colors);
+    modal.classList.add('hidden');
+    toast('Custom theme applied! ✨');
+    checkBadges();
+  });
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.classList.add('hidden');
+  });
+}
+
+// ---------- Team code (share/import schedule) ----------
+const TEAM_CODE_PREFIX = 'LIVEWIRE-';
+
+function buildTeamCode() {
+  const payload = {
+    v: 1,
+    team: dancer.team || 'Livewire',
+    coach: dancer.name,
+    weekly: weekly,
+    events: assistEvents,
+    nationalsDate: shared.nationalsDate,
+    practicesRemaining: shared.practicesRemaining,
+    ts: Date.now()
+  };
+  const json = JSON.stringify(payload);
+  // base64 of UTF-8 — handles emoji and special chars correctly
+  const b64 = btoa(unescape(encodeURIComponent(json)));
+  return TEAM_CODE_PREFIX + b64;
+}
+
+function parseTeamCode(code) {
+  code = code.trim();
+  if (!code.startsWith(TEAM_CODE_PREFIX)) {
+    return { ok: false, error: 'Not a valid team code (should start with LIVEWIRE-)' };
+  }
+  try {
+    const b64 = code.slice(TEAM_CODE_PREFIX.length);
+    const json = decodeURIComponent(escape(atob(b64)));
+    const data = JSON.parse(json);
+    if (!data.v || !data.team) throw new Error('missing fields');
+    return { ok: true, data };
+  } catch (e) {
+    return { ok: false, error: 'Invalid or corrupted code' };
+  }
+}
+
+function applyTeamCode(data) {
+  // Overwrite per-user weekly + assistant events
+  if (data.weekly) {
+    weekly = { ...DEFAULT_WEEKLY, ...data.weekly };
+    saveWeekly();
+  }
+  if (Array.isArray(data.events)) {
+    assistEvents = data.events;
+    saveAssist();
+  }
+  // Update shared (Nationals + practices) — these are team-wide anyway
+  if (data.nationalsDate) shared.nationalsDate = data.nationalsDate;
+  if (typeof data.practicesRemaining === 'number') shared.practicesRemaining = data.practicesRemaining;
+  saveJSON(KEYS.shared(), shared);
+
+  // Re-render everything affected
+  renderHeader();
+  renderWeek();
+  renderAssistSchedule();
+}
+
+function setupTeamCode() {
+  const modal = document.getElementById('team-code-modal');
+  const genBtn = document.getElementById('gen-btn');
+  const genOutput = document.getElementById('gen-output');
+  const codeDisplay = document.getElementById('code-display');
+  const copyBtn = document.getElementById('copy-btn');
+  const pasteInput = document.getElementById('paste-input');
+  const applyBtn = document.getElementById('apply-btn');
+
+  document.getElementById('team-btn').addEventListener('click', () => {
+    modal.classList.remove('hidden');
+    genOutput.classList.add('hidden');
+    pasteInput.value = '';
+  });
+  document.getElementById('close-team').addEventListener('click', () => {
+    modal.classList.add('hidden');
+  });
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.classList.add('hidden');
+  });
+
+  // Generate
+  genBtn.addEventListener('click', () => {
+    const code = buildTeamCode();
+    codeDisplay.value = code;
+    genOutput.classList.remove('hidden');
+  });
+
+  // Copy
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(codeDisplay.value);
+      toast('Code copied! Send it to your team.');
+    } catch {
+      codeDisplay.select();
+      document.execCommand('copy');
+      toast('Code copied!');
+    }
+  });
+
+  // Apply
+  applyBtn.addEventListener('click', () => {
+    const code = pasteInput.value.trim();
+    if (!code) { pasteInput.focus(); return; }
+    const result = parseTeamCode(code);
+    if (!result.ok) {
+      toast('❌ ' + result.error);
+      return;
+    }
+    const { data } = result;
+    const confirmMsg =
+      `Import schedule from ${data.coach} (${data.team})?\n\n` +
+      `This replaces your weekly schedule and coach events with theirs.`;
+    if (!confirm(confirmMsg)) return;
+    applyTeamCode(data);
+    modal.classList.add('hidden');
+    toast(`✅ Imported ${data.team} schedule from ${data.coach}`);
+  });
+}
+
+function setupThemePicker() {
+  const modal = document.getElementById('theme-modal');
+  document.getElementById('theme-btn').addEventListener('click', () => {
+    renderThemeGrid();
+    modal.classList.remove('hidden');
+  });
+  document.getElementById('close-theme').addEventListener('click', () => {
+    modal.classList.add('hidden');
+  });
+  // Close modal by clicking outside the card
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.classList.add('hidden');
+  });
+}
+
+// ---------- Team motto ----------
+function renderMotto() {
+  const el = document.getElementById('team-motto');
+  const canEdit = hasRole('teacher');
+  if (motto && motto.trim()) {
+    el.textContent = motto;
+    el.classList.remove('empty');
+  } else {
+    el.textContent = canEdit ? '+ add team motto' : '';
+    el.classList.add('empty');
+    if (!canEdit) el.style.display = 'none';
+    else el.style.display = '';
+  }
+  el.classList.toggle('editable', canEdit);
+}
+
+function setupMotto() {
+  const el = document.getElementById('team-motto');
+  el.addEventListener('click', () => {
+    if (!hasRole('teacher')) return;
+    if (el.querySelector('input')) return;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'team-motto-input';
+    input.maxLength = 80;
+    input.value = motto || '';
+    input.placeholder = "e.g. We don't miss";
+    el.innerHTML = '';
+    el.appendChild(input);
+    input.focus();
+    input.select();
+    const commit = () => {
+      motto = input.value.trim();
+      saveMotto();
+      renderMotto();
+      checkBadges();
+    };
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') input.blur();
+      if (e.key === 'Escape') { input.value = motto || ''; input.blur(); }
+    });
+  });
+}
+
+// ---------- Daily affirmation ----------
+function renderAffirmation() {
+  document.getElementById('affirmation-text').textContent = todaysAffirmation();
+}
+
+// ---------- Badges ----------
+function renderBadges() {
+  const grid = document.getElementById('badge-grid');
+  const summary = document.getElementById('badges-summary');
+  grid.innerHTML = '';
+  BADGES.forEach(b => {
+    const unlocked = badges.includes(b.id);
+    const div = document.createElement('div');
+    div.className = 'badge ' + (unlocked ? 'unlocked' : 'locked');
+    div.innerHTML = `
+      <div class="badge-emoji">${unlocked ? b.emoji : '🔒'}</div>
+      <div class="badge-name">${escapeHtml(b.name)}</div>
+      <div class="badge-desc">${escapeHtml(b.desc)}</div>
+    `;
+    div.title = unlocked ? `${b.name} — unlocked!` : `Locked: ${b.desc}`;
+    grid.appendChild(div);
+  });
+  summary.innerHTML = `<strong>${badges.length}</strong> of ${BADGES.length} unlocked`;
+}
+
+// ---------- Birthdays ----------
+function birthdayNextOccurrence(mmdd) {
+  // Returns the next Date this MM-DD falls on (today included)
+  const [m, d] = mmdd.split('-').map(Number);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  let candidate = new Date(now.getFullYear(), m - 1, d);
+  if (candidate < now) candidate = new Date(now.getFullYear() + 1, m - 1, d);
+  return candidate;
+}
+
+function renderBirthdays() {
+  const list = document.getElementById('birthdays-list');
+  const meta = document.getElementById('birthdays-meta');
+  list.innerHTML = '';
+  const entries = Object.entries(birthdays);
+  if (entries.length === 0) {
+    list.innerHTML = '<div class="custom-empty">No birthdays yet. Add one below ↓</div>';
+    meta.textContent = 'Upcoming team birthdays';
+    return;
+  }
+  const todayD = new Date();
+  todayD.setHours(0, 0, 0, 0);
+  // Sort by next occurrence ascending
+  const sorted = entries
+    .map(([name, mmdd]) => {
+      const next = birthdayNextOccurrence(mmdd);
+      const daysAway = Math.round((next - todayD) / 86400000);
+      const isToday = daysAway === 0;
+      return { name, mmdd, next, daysAway, isToday };
+    })
+    .sort((a, b) => a.daysAway - b.daysAway);
+
+  const todays = sorted.filter(s => s.isToday).map(s => s.name);
+  meta.textContent = todays.length
+    ? `🎉 Happy birthday ${todays.join(' & ')}!`
+    : `${entries.length} ${entries.length === 1 ? 'birthday' : 'birthdays'} on the calendar`;
+
+  sorted.forEach(({ name, mmdd, next, daysAway, isToday }) => {
+    const row = document.createElement('div');
+    row.className = 'birthday-row' + (isToday ? ' today' : '');
+    const [mm, dd] = mmdd.split('-');
+    const dateText = `${MONTHS[parseInt(mm, 10) - 1]} ${parseInt(dd, 10)}`;
+    let whenClass = '', whenText;
+    if (isToday) { whenClass = 'today'; whenText = 'today!'; }
+    else if (daysAway <= 7) { whenClass = 'soon'; whenText = `in ${daysAway} day${daysAway === 1 ? '' : 's'}`; }
+    else { whenText = `in ${daysAway} days`; }
+    row.innerHTML = `
+      <div class="birthday-cake">${isToday ? '🎉' : '🎂'}</div>
+      <div class="birthday-name">${escapeHtml(name)} <span style="color:var(--muted); font-weight:500; font-size:12px; margin-left:6px;">${dateText}</span></div>
+      <div class="birthday-when ${whenClass}">${whenText}</div>
+      <button class="delete-btn" data-name="${escapeHtml(name)}" title="Remove">🗑</button>
+    `;
+    row.querySelector('.delete-btn').addEventListener('click', () => {
+      if (confirm(`Remove ${name}'s birthday?`)) {
+        delete birthdays[name];
+        saveBirthdays();
+        renderBirthdays();
+      }
+    });
+    list.appendChild(row);
+  });
+}
+
+function setupBirthdays() {
+  const nameInput = document.getElementById('bday-name');
+  const dateInput = document.getElementById('bday-date');
+  const addBtn = document.getElementById('bday-add');
+  // Default the name field to current user for one-tap add
+  if (dancer && dancer.name && !birthdays[dancer.name]) {
+    nameInput.value = dancer.name;
+  }
+  const add = () => {
+    const name = nameInput.value.trim();
+    const date = dateInput.value;
+    if (!name) { nameInput.focus(); return; }
+    if (!date) { dateInput.focus(); return; }
+    const parts = date.split('-'); // YYYY-MM-DD
+    if (parts.length !== 3) return;
+    birthdays[name] = `${parts[1]}-${parts[2]}`;
+    saveBirthdays();
+    nameInput.value = '';
+    dateInput.value = '';
+    renderBirthdays();
+    checkBadges();
+    toast(`🎂 Added ${name}'s birthday`);
+  };
+  addBtn.addEventListener('click', add);
+  [nameInput, dateInput].forEach(inp => {
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
+  });
+}
+
+// ---------- Quotes wall ----------
+function renderQuotes() {
+  const list = document.getElementById('quotes-list');
+  const meta = document.getElementById('quotes-meta');
+  list.innerHTML = '';
+  if (quotes.length === 0) {
+    list.innerHTML = '<div class="custom-empty">No quotes yet. Add the first inside joke ↓</div>';
+    meta.textContent = 'Inside jokes & iconic team moments';
+    return;
+  }
+  meta.textContent = `${quotes.length} legendary moment${quotes.length === 1 ? '' : 's'}`;
+  // Most recent first
+  const sorted = [...quotes].sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  sorted.forEach(q => {
+    const item = document.createElement('div');
+    item.className = 'quote-item';
+    item.innerHTML = `
+      <div class="quote-text">${escapeHtml(q.text)}</div>
+      ${q.by ? `<div class="quote-by">${escapeHtml(q.by)}</div>` : ''}
+      <button class="quote-delete" data-id="${q.id}" title="Delete">✕</button>
+    `;
+    item.querySelector('.quote-delete').addEventListener('click', () => {
+      if (confirm('Delete this quote?')) {
+        quotes = quotes.filter(x => x.id !== q.id);
+        saveQuotes();
+        renderQuotes();
+      }
+    });
+    list.appendChild(item);
+  });
+}
+
+function setupQuotes() {
+  const textInput = document.getElementById('quote-text');
+  const byInput = document.getElementById('quote-by');
+  const addBtn = document.getElementById('quote-add');
+  const add = () => {
+    const text = textInput.value.trim();
+    if (!text) { textInput.focus(); return; }
+    const by = byInput.value.trim();
+    quotes.push({
+      id: 'q-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+      text,
+      by,
+      ts: Date.now()
+    });
+    saveQuotes();
+    textInput.value = '';
+    byInput.value = '';
+    renderQuotes();
+    checkBadges();
+    toast('💬 Quote added to the wall');
+  };
+  addBtn.addEventListener('click', add);
+  [textInput, byInput].forEach(inp => {
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
+  });
+}
+
+// ---------- Simple mode + off-season ----------
+// IDs/selectors of cards that vanish in simple mode
+const SIMPLE_HIDE = [
+  { id: 'power-card' },
+  { id: 'badges-card' },
+  { id: 'bonus-card' },
+  { sel: '.quotes-card' }
+];
+
+function applySimpleMode() {
+  SIMPLE_HIDE.forEach(({ id, sel }) => {
+    const el = id ? document.getElementById(id) : document.querySelector(sel);
+    if (!el) return;
+    if (simpleMode) el.style.display = 'none';
+    else el.style.display = '';
+  });
+  const btn = document.getElementById('simple-toggle');
+  if (btn) btn.textContent = simpleMode ? '✨ Full mode' : '🧘 Simple mode';
+  // After re-showing, re-apply the dancer-only logic (which also hides these for non-dancers)
+  if (!simpleMode && typeof renderHeader === 'function' && dancer) renderHeader();
+}
+
+function applyOffSeason() {
+  const card = document.querySelector('.comp-card');
+  if (!card) return;
+  card.style.display = isOffSeason() ? 'none' : '';
+}
+
+function setupSimpleToggle() {
+  const btn = document.getElementById('simple-toggle');
+  btn.addEventListener('click', () => {
+    simpleMode = !simpleMode;
+    localStorage.setItem('livewire.simpleMode', simpleMode ? 'true' : 'false');
+    applySimpleMode();
+    toast(simpleMode ? '🧘 Simple mode on' : '✨ Full mode on');
+  });
+}
+
+// ---------- Actions ----------
+function setupActions() {
+  // Reset today
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    if (confirm("Reset today's checks?")) {
+      checks = {};
+      saveChecks();
+      renderSections();
+      renderCustomPlan();
+      document.getElementById('streak-num').textContent = computeStreak();
+    }
+  });
+
+  // Switch user
+  document.getElementById('user-chip').addEventListener('click', () => {
+    if (confirm('Switch user? Your progress stays saved on this device.')) {
+      dancer = null;
+      saveJSON(KEYS.dancer, null);
+      location.reload();
+    }
+  });
+
+  // Admin panel toggle
+  const adminPanel = document.getElementById('admin-panel');
+  document.getElementById('admin-btn').addEventListener('click', () => {
+    adminPanel.classList.toggle('hidden');
+    document.getElementById('nationals-input').value = shared.nationalsDate;
+    document.getElementById('practices-input').value = shared.practicesRemaining;
+  });
+  document.getElementById('cancel-admin').addEventListener('click', () => {
+    adminPanel.classList.add('hidden');
+  });
+  document.getElementById('save-admin').addEventListener('click', () => {
+    const newDate = document.getElementById('nationals-input').value;
+    const newPractices = parseInt(document.getElementById('practices-input').value, 10);
+    if (newDate) shared.nationalsDate = newDate;
+    if (!isNaN(newPractices) && newPractices >= 0) shared.practicesRemaining = newPractices;
+    saveJSON(KEYS.shared(), shared);
+    adminPanel.classList.add('hidden');
+    renderHeader();
+  });
+}
+
+// ---------- Init ----------
+function init() {
+  // Apply saved theme (or default) before anything renders
+  const savedTheme = localStorage.getItem(KEYS.theme) || DEFAULT_THEME;
+  applyTheme(savedTheme);
+
+  if (!dancer || !dancer.name) {
+    showWelcome();
+    return;
+  }
+  loadDancerData();
+  renderHeader();
+  renderMotto();
+  renderAffirmation();
+  renderPowerLevel();
+  renderBadges();
+  renderComps();
+  renderWeek();
+  renderSections();
+  renderBonus();
+  renderCustomPlan();
+  renderAssistSchedule();
+  renderBirthdays();
+  renderQuotes();
+  setupActions();
+  setupThemePicker();
+  setupCustomTheme();
+  setupCustomPlan();
+  setupAssistSchedule();
+  setupWeekNav();
+  setupTeamCode();
+  setupComps();
+  setupMotto();
+  setupBirthdays();
+  setupQuotes();
+  setupBonus();
+  setupSimpleToggle();
+  applySimpleMode();
+  applyOffSeason();
+  // Initial badge sweep (silent — no toasts/confetti on app open)
+  checkBadges({ silent: true });
+  // If someone's birthday is today, throw some confetti
+  const todayMD = (() => {
+    const d = new Date();
+    return String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  })();
+  if (Object.values(birthdays).some(md => md === todayMD)) {
+    setTimeout(() => confetti({ count: 50 }), 600);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
